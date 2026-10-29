@@ -165,6 +165,7 @@ select.in{padding:0 4px}
  .card{grid-template-columns:60px minmax(0,1fr);gap:10px;padding:12px 10px}
  .av{width:60px;height:72px}
  .card .av{background-size:170px 170px,100% 100%!important;background-position:50% calc(50% - 6px),0 0!important}
+ .card .av.ax{background-size:102px 102px,100% 100%!important;background-position:calc(50% - 2px) calc(50% - 7px),0 0!important}
  .slots{grid-template-columns:repeat(7,minmax(0,1fr));row-gap:10px;column-gap:5px}.sep{display:none}
  .cn{flex-wrap:wrap;row-gap:0}.cn .lv{margin-left:0;width:100%}
  .tile .ps{right:-3px;top:-4px;min-width:12px;height:12px;font-size:8px;line-height:10px}
@@ -444,6 +445,7 @@ function normalize3(s){
   if(!s.fix11){const SEEDN=Object.fromEntries(GROUP_SEED.map(g=>['g_'+g.k,g.name]));for(const g of s.groups)if(SEEDN[g.id]&&g.name===SEEDN[g.id])g.name='';
     const ids=new Set(s.chars.map(c=>c.id));
     delete s.view;s.fix11=1;}
+
   if(!s.fix6){ // one-time: colour groups from the sheet + parties for coloured plan cells that had none
     const ids=new Set(s.chars.map(c=>c.id));const sheetUser=['c1','c2','c3','c4','c5','c6'].every(x=>ids.has(x));
     if(sheetUser&&!s.groups.length){
@@ -577,11 +579,11 @@ function myWorlds(b){const w=new Set();for(const it of b.items){const c=charById
 function autoCross(b){const ks=b.members.map(pWorld).filter(Boolean);if(!ks.length)return null;const mw=myWorlds(b);if(!mw.size)return null;return ks.some(w=>!mw.has(w));}
 function isX(b){if(b.xo)return b.cross;const a=autoCross(b);return a===null?b.cross:a;}
 const pq=[];let pqBusy=false;
-function lookupPeople(names){if(!key)return;const now=Date.now();
+function lookupPeople(names){const now=Date.now();
   for(const n of names){const c=S.ppl[n];if(c&&(c.w||now-c.t<864e5))continue;if(!pq.includes(n))pq.push(n);}runPQ();}
 async function runPQ(){if(pqBusy)return;pqBusy=true;
-  while(pq.length&&key){const n=pq.shift();
-    try{const {ocid}=await api('/id',{character_name:n});const r=await api('/character/basic',{ocid});S.ppl[n]={w:r.world_name||'',t:Date.now()};}
+  while(pq.length){const n=pq.shift();
+    try{if(key){const {ocid}=await api('/id',{character_name:n});const r=await api('/character/basic',{ocid});S.ppl[n]={w:r.world_name||'',t:Date.now()};}else{const r=await wlook(n);S.ppl[n]={w:r.world||'',t:Date.now()};}}
     catch(e){if(/한도|네트워크|점검|서버/.test(e.message)){pq.length=0;break;}S.ppl[n]={w:'',t:Date.now(),f:1};}
     for(const b of S.bundles)if(!b.xo&&b.members.includes(n)){const a=autoCross(b);if(a!==null)b.cross=a;}
     save();render();await new Promise(z=>setTimeout(z,300));}
@@ -628,6 +630,15 @@ function schedTxt(s,short){if(!s||s.t==='none')return '미정';const t=s.time?' 
   if(s.t==='fix')return (short?'':'매주 ')+DAYS[s.wd]+t;
   if(!s.date)return '날짜 미정';const ms=dateMs(s.date);return md(ms)+' '+DAYS[dayOfMs(ms)]+t;}
 
+/* keyless: fill image/level/job/world of named characters via the Worker (stale after 6h, or all on 새로고침) */
+let wBusy=false;
+async function wrefresh(all){if(wBusy)return;wBusy=true;
+  const now=Date.now(),todo=S.chars.filter(c=>c.name&&(all||!(S.cache[c.id]||{}).img||now-((S.cache[c.id]||{}).t||0)>216e5));
+  if(all){ui.busy=true;render();}
+  for(const c of todo){try{const r=await wlook(c.name);const cc=S.cache[c.id]=Object.assign(S.cache[c.id]||{},{img:r.img,level:r.level,cls:r.cls,world:r.world,t:r.t});if(c.manual){c.cls=r.cls;c.level=r.level;}save();render();}
+    catch(e){if(/네트워크|서버|한도/.test(e.message)){if(all)toast(e.message);break;}}
+    await new Promise(z=>setTimeout(z,200));}
+  if(all)ui.busy=false;wBusy=false;render();lookupPeople(allPeople().map(x=>x[0]));}
 /* ---------- API ---------- */
 const NXERR={OPENAPI00001:'넥슨 서버 오류',OPENAPI00002:'API 권한 없음',OPENAPI00003:'캐릭터를 찾을 수 없음',OPENAPI00004:'캐릭터를 찾을 수 없음',OPENAPI00005:'API 키가 올바르지 않음',OPENAPI00006:'잘못된 요청',OPENAPI00007:'요청 한도 초과',OPENAPI00009:'데이터 준비 중',OPENAPI00010:'게임 점검 중',OPENAPI00011:'API 점검 중'};
 async function api(path,params){
@@ -663,7 +674,7 @@ async function loadAccount(){
   account.sort((a,b)=>b.level-a.level);
 }
 async function refresh(){
-  if(!key){render();return;}
+  if(!key){await wrefresh(true);return;}
   ui.busy=true;ui.err='';render();
   const errs=[];
   const fatal=m=>/키가|권한|한도|서버|네트워크|점검/.test(m);
@@ -698,6 +709,8 @@ async function refresh(){
       }
     }catch(e){if(fatal(e.message)){stop=e.message;}else errs.push(c.name+': '+e.message);}
   });
+  // a character the API couldn't serve (limit, outage, not found) still gets its outfit/level from the Worker
+  for(const c of S.chars.filter(c=>c.name&&!(S.cache[c.id]||{}).img)){try{const r=await wlook(c.name);S.cache[c.id]=Object.assign(S.cache[c.id]||{},{img:r.img,level:r.level,cls:r.cls,world:r.world,t:r.t});if(c.manual){c.cls=r.cls;c.level=r.level;}}catch(e){if(/네트워크|서버|한도/.test(e.message))break;}}
   if(stop)errs.unshift(stop);
   S.fetchedAt=new Date().toISOString();save();
   ui.err=[...new Set(errs)].join(' · ');ui.busy=false;render();
@@ -705,9 +718,20 @@ async function refresh(){
 }
 const hasWeekly=j=>(j.boss_contents||[]).some(e=>e.cycle==='bossWeekly'&&String(e.registration_flag).toLowerCase()==='true');
 const kstDate=back=>kst(Date.now()-back*D).toISOString().slice(0,10);
+const WORKER='https://maple-char.ycoolpeach98coolpeach98coolpeach98.workers.dev';
+// keyless lookup (public ranking page via the maple-char Worker): {name,world,level,job,image}
+async function wlook(name){let r;
+  try{r=await fetch(WORKER+'/char?name='+encodeURIComponent(name));}catch(e){throw new Error('네트워크 오류');}
+  if(r.status===404||r.status===400)throw new Error('캐릭터를 찾을 수 없음');
+  if(r.status===429)throw new Error('요청 한도 초과');
+  if(!r.ok)throw new Error('조회 서버 오류');
+  const j=await r.json();if(j.image)S.imgs[j.name||name]=j.image;
+  return {img:j.image||'',level:j.level||'',cls:j.job||'',world:j.world||'',name:j.name||name,t:Date.now()};}
 async function lookupName(name){
-  const {ocid}=await api('/id',{character_name:name});
-  const b=await api('/character/basic',{ocid});
+  if(!key){const r=await wlook(name);save();return r;}
+  let ocid,b;
+  try{ocid=(await api('/id',{character_name:name})).ocid;b=await api('/character/basic',{ocid});}
+  catch(e){try{const r=await wlook(name);save();return r;}catch(e2){throw e;}} // API down/limited -> Worker
   S.imgs[name]=b.character_image;save();
   return {ocid,img:b.character_image,level:b.character_level,cls:b.character_class,world:b.world_name,name:b.character_name||name};
 }
@@ -731,9 +755,10 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&
 const SIL="data:image/svg+xml,"+encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300'><g fill='#c9c9c2'><circle cx='146' cy='146' r='22'/><path d='M118 200c0-20 12-30 28-30s28 10 28 30z'/></g></svg>");
 function charImg(c){const cc=S.cache[c.id]||{};return c.img||cc.img||S.imgs[c.name]||'';}
 // show region of 300x300 character image centered at (cx,cy) natural px, zoom z
-function faceStyle(url,size,z,cy,cx=146){const bx=size/2-cx*z,by=size/2-cy*z;return `background-image:url('${esc(url||SIL)}');background-size:${300*z}px ${300*z}px;background-position:${bx}px ${by}px;width:${size}px;height:${size}px`;}
+const isAv=u=>/^https:\/\/avatar\.maplestory\.nexon\.com\//.test(u||'');
+function faceStyle(url,size,z,cy,cx=146){const av=isAv(url),n=av?180:300;if(av){cx-=56;cy-=58;}const bx=size/2-cx*z,by=size/2-cy*z;return `background-image:url('${esc(url||SIL)}');background-size:${n*z}px ${n*z}px;background-position:${bx}px ${by}px;width:${size}px;height:${size}px`;}
 // full-body: character occupies ~x90-210,y110-205 of the 300x300 render
-function bodyStyle(url){return `background-image:url('${esc(url)}'),linear-gradient(#f5f5f2,#f5f5f2);background-size:222px 222px,100% 100%;background-position:50% calc(50% - 7px),0 0`;}
+function bodyStyle(url){const av=isAv(url);return `background-image:url('${esc(url)}'),linear-gradient(#f5f5f2,#f5f5f2);background-size:${av?'133px 133px':'222px 222px'},100% 100%;background-position:${av?'calc(50% - 3px) calc(50% - 8px)':'50% calc(50% - 7px)'},0 0`;}
 function face(c,size){return `<span class="face" title="${esc(alias(c))}" style="${faceStyle(charImg(c),size,size/34,146)}"></span>`;}
 const alias=c=>nick(c);
 const job=c=>{const cc=S.cache[c.id]||{};const cl=cc.cls||c.cls||'',lv=cc.level||c.level||'';return [cl,lv?'Lv.'+lv:''].filter(Boolean).join(' · ');};
@@ -872,7 +897,7 @@ function render(){
     const cc=S.cache[c.id]||{};
     const im=charImg(c);
     cards+=`<div class="card" data-act="bset" data-c="${c.id}">
-      <div class="av" style="${im?bodyStyle(im,84,96):`background:url('${SIL}') center 60%/150px no-repeat,var(--panel2)`}">${c.manual?'<span class="tg2">직접 체크</span>':''}</div>
+      <div class="av${isAv(im)?' ax':''}" style="${im?bodyStyle(im,84,96):`background:url('${SIL}') center 60%/150px no-repeat,var(--panel2)`}">${c.manual?'<span class="tg2">직접 체크</span>':''}</div>
       <div class="cb"><div class="ci"><div class="cn"><span class="al ${c.name?'':'nn'}" title="${esc(nick(c))}">${esc(nick(c))}</span>${c.name?'':`<button class="btn sm nnb" data-act="bset" data-c="${c.id}" data-f="name">닉네임 입력</button>`}<span class="lv">${esc(job(c))}</span></div>
         ${(()=>{const r=revenue(c);return `<div class="rev"><b>${won(r.wkC)}</b><span>/ ${won(r.wk)}</span>${r.mo?`<em>월간 ${r.moC?'<b>'+won(r.moC)+'</b>':won(r.mo)}</em>`:''}</div>`;})()}
         <div class="cnt"><div class="bar"><i style="width:${cnt/12*100}%"></i></div><b>${cnt}<span>/12</span></b><span class="rem ${rem.length?'':'z'}">${rem.length?rem.length+' 남음':'완료'}</span></div></div>
@@ -919,7 +944,7 @@ function bossModal(){
     <div class="ph"><h2 class="mh">${esc(nick(c))}</h2><span class="ctr ${full?'full':''}">${n}/12</span><span class="mt">${won(dwk)}${dmo?`<i>월간 ${won(dmo)}</i>`:''}</span><span class="sp"></span><button class="btn sm ghost" data-act="close" aria-label="닫기">${I.x}</button></div>
     <div class="bd">
       <div class="row">${c.manual?`<span class="lbl">닉네임</span><input class="in ${c.name?'':'need'}" id="cfn" style="width:150px" maxlength="12" value="${esc(c.name)}" placeholder="${esc(nick(c))}" data-cf="name">
-        ${key?`<button class="btn sm" data-act="clook">조회</button>`:''}<span class="lbl">이미지 URL</span><input class="in" style="width:200px" value="${esc(c.img||'')}" data-cf="img">`:`<span class="lbl">${esc(job(c))}</span>`}
+        <button class="btn sm" data-act="clook">조회</button><span class="lbl">이미지 URL</span><input class="in" style="width:200px" value="${esc(c.img||'')}" data-cf="img">`:`<span class="lbl">${esc(job(c))}</span>`}
         <span class="sp"></span><button class="btn sm ghost" data-act="cmv" data-d="-1" aria-label="앞으로">${I.l}</button><button class="btn sm ghost" data-act="cmv" data-d="1" aria-label="뒤로">${I.r}</button><button class="btn sm dng" data-act="cdel">삭제</button></div>
       <div class="bl">${WEEKLY.map(b=>row(b,false)).join('')}</div>
       <div class="bl">${row(MONTHLY,true)}</div>
@@ -951,7 +976,7 @@ function modalHtml(){
   }
   if(m==='man'){const r=ui.man.res;
     return `<div class="mb" data-act="close"><div class="md" data-stop="1">${head('직접 추가')}<div class="bd">
-      <div class="row"><input class="in" id="mq" style="flex:1" placeholder="닉네임" value="${esc(ui.man.q)}">${key?`<button class="btn" data-act="mlook" ${ui.man.busy?'disabled':''}>${ui.man.busy?'<span class="spin" style="border-top-color:var(--ac)"></span>':''}조회</button>`:''}</div>
+      <div class="row"><input class="in" id="mq" style="flex:1" placeholder="닉네임" value="${esc(ui.man.q)}"><button class="btn" data-act="mlook" ${ui.man.busy?'disabled':''}>${ui.man.busy?'<span class="spin" style="border-top-color:var(--ac)"></span>':''}조회</button></div>
       ${r?`<div class="row" style="gap:12px"><div class="av" style="${bodyStyle(r.img,84,96)}"></div><div><b>${esc(r.name)}</b><div style="color:var(--mu);font-size:12px">Lv.${r.level} ${esc(r.cls)} · ${esc(r.world)}</div></div></div>`:''}
       ${!key?`<div class="row"><span class="lbl">이미지 URL</span><input class="in" id="mimg" style="flex:1" value="${esc(ui.man.img||'')}"></div>`:''}
     </div><div class="ft"><span class="sp"></span><button class="btn" data-act="close">취소</button><button class="btn pri" data-act="madd">추가</button></div></div></div>`;}
@@ -1045,8 +1070,8 @@ document.addEventListener('click',e=>{
     case 'mlook':{const q=document.getElementById('mq').value.trim();if(!q)break;ui.man.q=q;ui.man.busy=true;render();lookupName(q).then(r=>{ui.man.res=r;}).catch(er=>{ui.man.res=null;toast(er.message);}).finally(()=>{ui.man.busy=false;render();});break;}
     case 'madd':{const q=(document.getElementById('mq').value||'').trim();const r=ui.man.res&&ui.man.res.name===q?ui.man.res:null;const img=document.getElementById('mimg')?document.getElementById('mimg').value.trim():'';
       const nc={id:uid('c'),alias:'',name:q,cls:r?r.cls:'',level:r?r.level:'',img:img,manual:true,custom:true,sel:{},monthly:null,fill:false};
-      S.chars.push(nc);if(r)S.cache[nc.id]={ocid:r.ocid,img:r.img,level:r.level,cls:r.cls,world:r.world};ui.modal=null;save();render();
-      if(!r&&q&&key)lookupName(q).then(rr=>{S.cache[nc.id]=Object.assign(S.cache[nc.id]||{},rr);nc.cls=rr.cls;nc.level=rr.level;save();render();}).catch(()=>{});
+      S.chars.push(nc);if(r)S.cache[nc.id]={ocid:r.ocid,img:r.img,level:r.level,cls:r.cls,world:r.world,t:r.t||Date.now()};ui.modal=null;save();render();
+      if(!r&&q)lookupName(q).then(rr=>{S.cache[nc.id]=Object.assign(S.cache[nc.id]||{},rr);nc.cls=rr.cls;nc.level=rr.level;save();render();}).catch(()=>{});
       break;}
     case 'compact':S.compact=t.checked;save();render();break;
     case 'exp':{const o={...S};if(document.getElementById('xk').checked)o.apiKey=key;const bl=new Blob([JSON.stringify(o,null,1)],{type:'application/json'});const u=URL.createObjectURL(bl);const l=document.createElement('a');l.href=u;l.download='boss-scheduler-'+weekKey()+'.json';l.click();URL.revokeObjectURL(u);break;}
@@ -1070,11 +1095,11 @@ document.addEventListener('change',e=>{
 document.addEventListener('input',e=>{if(e.target.id==='aq'){ui.acc.q=e.target.value;const pos=e.target.selectionStart;render();const i=document.getElementById('aq');i.focus();i.setSelectionRange(pos,pos);}});
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'&&ui.modal)closeModal();
-  if(e.key==='Enter'){if(e.target.id==='k')document.querySelector('[data-act=savekey]').click();if(e.target.id==='k0')document.querySelector('[data-act=savekey0]').click();if(e.target.id==='mq'&&key)document.querySelector('[data-act=mlook]').click();if(e.target.id==='bmn'){e.preventDefault();document.querySelector('[data-act=bmadd]').click();}if(e.target.dataset&&(e.target.dataset.sf==='time'||e.target.dataset.bf==='name'||e.target.dataset.bf==='memo'))e.target.blur();}
+  if(e.key==='Enter'){if(e.target.id==='k')document.querySelector('[data-act=savekey]').click();if(e.target.id==='k0')document.querySelector('[data-act=savekey0]').click();if(e.target.id==='mq')document.querySelector('[data-act=mlook]').click();if(e.target.id==='bmn'){e.preventDefault();document.querySelector('[data-act=bmadd]').click();}if(e.target.dataset&&(e.target.dataset.sf==='time'||e.target.dataset.bf==='name'||e.target.dataset.bf==='memo'))e.target.blur();}
 });
 setInterval(()=>{if(!ui.modal&&(!document.activeElement||document.activeElement===document.body))render();},60000);
 save();render();
-if(key&&S.chars.length)refresh();
+if(key&&S.chars.length)refresh();else if(S.chars.length)wrefresh(false);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&key&&S.chars.length&&!ui.busy&&(!S.fetchedAt||Date.now()-Date.parse(S.fetchedAt)>15*6e4))refresh();});
 </script>
 </body>
