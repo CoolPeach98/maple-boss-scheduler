@@ -222,6 +222,12 @@ select.in{padding:0 4px}
 .bt b+.who{font-weight:500;color:var(--mu);font-size:12px}
 .bt .who i{font-style:normal;color:var(--mu2);font-weight:500}
 .bt .who.nm{color:var(--mu2);font-weight:500;font-size:12px}
+.bt .dot{width:8px;height:8px;border-radius:50%;flex:none;align-self:center;background:var(--acc)}
+.bt .who.bo{font-weight:600}
+.bh .pa{flex:none;border:0;background:none;padding:0 2px;font-size:11px;color:var(--mu2);white-space:nowrap}
+.bh .pa:hover{color:var(--tx)}
+.card.flash{animation:cfl 1.4s ease-out}
+@keyframes cfl{0%,40%{box-shadow:inset 0 0 0 2px var(--ac)}100%{box-shadow:inset 0 0 0 2px transparent}}
 .bt:hover b,.bt:hover .who{text-decoration:underline;text-decoration-color:#0004;text-underline-offset:3px}
 .xw{font-size:11px;font-weight:700;color:#6a4fc9;white-space:nowrap}
 .sz{color:var(--mu2);font-size:12px;white-space:nowrap;flex:none;font-variant-numeric:tabular-nums}
@@ -491,7 +497,10 @@ function reconcile(st){
     if(it.d&&it.d!==sl.d)setCharDiff(c,it.b,it.d,st);it.d='';return true;});}
 let S=load();
 let key=localStorage.getItem(LSK)||'';
-let ui={tf:{b:'',c:''},be:null,split:null,wo:0,pf:[],flashB:null,modal:null,busy:false,err:'',mf:null,pop:null,bc:null,draft:null,acc:{sel:{},world:'all',low:false,q:''},man:{q:'',res:null,busy:false},mem:null};
+const LSPF=LS.split('.')[0]+'.pf';
+const loadPf=()=>{try{const a=JSON.parse(localStorage.getItem(LSPF));return Array.isArray(a)?a.filter(x=>typeof x==='string'):[];}catch(e){return [];}};
+const savePf=()=>{try{ui.pf.length?localStorage.setItem(LSPF,JSON.stringify(ui.pf)):localStorage.removeItem(LSPF);}catch(e){}};
+let ui={tf:{b:'',c:''},be:null,split:null,wo:0,pf:loadPf(),pfDone:null,flashB:null,modal:null,busy:false,err:'',mf:null,pop:null,bc:null,draft:null,acc:{sel:{},world:'all',low:false,q:''},man:{q:'',res:null,busy:false},mem:null};
 let account=[];
 // group members ride along on every party of that group
 function gmOf(p,gs,ms){const g=p.g&&gs.find(x=>x.id===p.g);return g?(g.members||[]).filter(id=>ms.some(m=>m.id===id)):[];}
@@ -799,7 +808,13 @@ function tile(c,s,mon){
 const nick=c=>c.name||c.alias||c.cls||'캐릭터';
 const chIdx=id=>{const i=S.chars.findIndex(c=>c.id===id);return i<0?99:i;};
 const itemSort=(x,y)=>ORDER[x.b]-ORDER[y.b]||chIdx(x.c)-chIdx(y.c);
-function bTitle(b){const n=b.name?`<b>${esc(b.name)}</b>`:'';const ms=b.members.length?`<span class="who">${b.members.map(esc).join(' · ')}${b.open?` <i>+${b.open}</i>`:''}</span>`:'';return n+ms||'<span class="who nm">+ 파티원</span>';}
+const bBosses=b=>[...new Set(b.items.slice().sort((x,y)=>ORDER[x.b]-ORDER[y.b]).map(i=>i.b))].join('·');
+function bTitle(b){const n=b.name?`<b>${esc(b.name)}</b>`:'';const ms=b.members.length?`<span class="who">${b.members.map(esc).join(' · ')}${b.open?` <i>+${b.open}</i>`:''}</span>`:'';if(n||ms)return n+ms;
+  const bs=bBosses(b);if(!bs)return '<span class="who nm">+ 파티원</span>';
+  // same boss list as another unnamed party -> add my characters to tell them apart
+  const twin=S.bundles.some(x=>x!==b&&!x.name&&!x.members.length&&bBosses(x)===bs);
+  const mine=twin?[...new Set(b.items.map(i=>i.c).filter(Boolean))].sort((x,y)=>chIdx(x)-chIdx(y)).map(id=>charById(id)).filter(Boolean).map(nick).join('·'):'';
+  return `<span class="dot"></span><span class="who bo">${esc(bs)}${mine?` <i>${esc(mine)}</i>`:''}</span>`;}
 function bundleCard(b,st,next,off=0){
   const ws=weekStartKst()+off*7*D,now=kst().getTime(),ti=todayIdx();
   const its=b.items.slice().sort(itemSort),sz=bSize(b);
@@ -815,7 +830,7 @@ function bundleCard(b,st,next,off=0){
     if(S.compact)return `<button class="bti ${done?'clr':''}" data-act="itog" data-id="${b.id}" data-i="${it.id}" aria-pressed="${done}" title="${esc(DIFF_KO[d]+' '+it.b+' · '+(c?nick(c):'캐릭터 미정'))}">${ic(it.b)}<span class="bg ${d}">${DIFF_LT[d]}</span></button>`;
     return `<div class="bro ${done?'done':''}">${icon(it.b,24,d,'s')}<span class="bb">${esc(it.b)}<i>${DIFF_KO[d]}</i></span><span class="bc ${c?'':'nm'}">${c?esc(nick(c)):'캐릭터 미정'}</span>${it.o?`<span class="ot ${ol?'late':''}">${esc(schedTxt(it.o,1))}</span>`:''}${off?'<span></span>':`<button class="pk ${done?'on':''}" data-act="itog" data-id="${b.id}" data-i="${it.id}" aria-pressed="${done}" aria-label="${esc(it.b+(done?' 클리어 취소':' 클리어 체크'))}"></button>`}</div>`;}).join('');
   return `<div class="bk ${allDone?'done':''} ${off?'nx':''} ${next?'next':''} ${ui.flashB===b.id?'flash':''}" id="b-${b.id}" style="--acc:${b.color}">
-    <div class="bh"><button class="bt" data-act="bed" data-id="${b.id}">${bTitle(b)}</button>${isX(b)?'<span class="xw">통합</span>':''}<span class="sz">${sz}인</span>
+    <div class="bh"><button class="bt" data-act="bed" data-id="${b.id}" title="${esc(bLabel(b)||bBosses(b))}">${bTitle(b)}</button>${!b.name&&!b.members.length&&b.items.length?`<button class="pa" data-act="bed" data-id="${b.id}" data-f="mem">+ 파티원</button>`:''}${isX(b)?'<span class="xw">통합</span>':''}<span class="sz">${sz}인</span>
       <button class="bs ${b.sched.t} ${sLate?'late':''} ${sToday?'td':''} ${st.late?'late':''}" data-act="bed" data-id="${b.id}" data-f="sch">${b.sched.t==='fix'?'<i>매주</i>':''}${esc(b.sched.t==='none'?'미정':schedTxt(b.sched,1))}</button></div>
     ${b.memo?`<div class="bmemo">${esc(b.memo)}</div>`:''}
     <div class="brs ${S.compact?'cp':''}">${rows||`<button class="btn sm ghost" data-act="bed" data-id="${b.id}" data-f="add">${I.plus}보스</button>`}</div>
@@ -838,7 +853,8 @@ function strip(off){
 }
 function partySection(){
   const wo=ui.wo||0,ws=weekStartKst()+wo*7*D;
-  const ppl=allPeople();ui.pf=ui.pf.filter(n=>ppl.some(x=>x[0]===n));
+  const ppl=allPeople();const pf0=ui.pf.length;ui.pf=ui.pf.filter(n=>ppl.some(x=>x[0]===n));if(ui.pf.length!==pf0)savePf();
+  const dOpen=pfOn()?ui.pfDone!==false:!!S.doneOpen;
   const sts=S.bundles.filter(pfMatch).map(b=>({b,st:bState(b,wo)}));
   const by=k=>sts.filter(x=>x.st.k===k);
   const wk=by('week').sort((a,b)=>a.st.at-b.st.at),co=by('coord'),lt=by('later').sort((a,b)=>a.st.at-b.st.at),dn=by('done');
@@ -853,7 +869,7 @@ function partySection(){
     ${pf}
     ${S.bundles.length?`<div class="strip">${strip(wo)}</div>`:''}
     ${sec(wo?'다음 주':'이번 주',wk)}${sec('조율 필요',co,'co')}${sec(wo?'그 이후':'다음 주 이후',lt)}
-    ${!wo&&dn.length?`<div class="sec dn"><div class="sh"><button class="tgl" data-act="dfold" aria-expanded="${!!S.doneOpen}">${I.chev}완료 <b>${dn.length}</b></button></div>${S.doneOpen?grid(dn):''}</div>`:''}
+    ${!wo&&dn.length?`<div class="sec dn"><div class="sh"><button class="tgl" data-act="dfold" aria-expanded="${dOpen}">${I.chev}완료 <b>${dn.length}</b></button></div>${dOpen?grid(dn):''}</div>`:''}
     ${S.bundles.length?'':`<div class="ob"><button class="btn" data-act="padd">${I.plus}파티</button></div>`}
   </div>`;
 }
@@ -913,7 +929,8 @@ function render(){
     ts+=`<span class="sep"></span>`+tile(c,mon,true);
     const cc=S.cache[c.id]||{};
     const im=charImg(c);
-    cards+=`<div class="card" data-act="bset" data-c="${c.id}">
+    const fl=ui.flashC&&ui.flashC.id===c.id&&Date.now()-ui.flashC.at<1400?Date.now()-ui.flashC.at:-1;
+    cards+=`<div class="card${fl>=0?' flash':''}" data-act="bset" data-c="${c.id}"${fl>0?` style="animation-delay:-${fl}ms"`:''}>
       <div class="av${isAv(im)?' ax':''}" style="${im?bodyStyle(im,84,96):`background:url('${SIL}') center 60%/150px no-repeat,var(--panel2)`}">${c.manual?'<span class="tg2">직접 체크</span>':''}</div>
       <div class="cb"><div class="ci"><div class="cn"><span class="al ${c.name?'':'nn'}" title="${esc(nick(c))}">${esc(nick(c))}</span>${c.name?'':`<button class="btn sm nnb" data-act="bset" data-c="${c.id}" data-f="name">닉네임 입력</button>`}<span class="lv">${esc(job(c))}</span></div>
         ${(()=>{const r=revenue(c);return `<div class="rev"><b>${won(r.wkC)}</b><span>/ ${won(r.wk)}</span>${r.mo?`<em>월간 ${r.moC?'<b>'+won(r.moC)+'</b>':won(r.mo)}</em>`:''}</div>`;})()}
@@ -1023,6 +1040,11 @@ function pumpAcc(){while(accBusy<3&&accQ.length){const n=accQ.shift();const x=ac
 
 const bossDirty=()=>ui.modal==='boss'&&ui.draft&&JSON.stringify(ui.draft)!==ui.draft0;
 const askClose=()=>!bossDirty()||confirm('저장하지 않고 닫을까?');
+function flashCard(id){ui.flashC={id,at:Date.now()};const el=document.querySelector(`.card[data-c="${id}"]`);if(!el)return;el.scrollIntoView({block:'center',behavior:'smooth'});el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash');}
+// nickname already on the board -> show that card instead of adding a copy
+function dupCard(n){const c=S.chars.find(x=>x.name===n);if(!c)return false;ui.modal=null;render();flashCard(c.id);return true;}
+function addAccChar(x,r){const nc={id:uid('c'),alias:'',name:x.name,cls:x.cls,level:x.level,manual:false,custom:false,sel:{},monthly:null,fill:false};
+  S.chars.push(nc);S.cache[nc.id]={ocid:x.ocid,img:S.imgs[x.name]||(r&&r.img)||'',world:x.world};ui.modal=null;save();render();flashCard(nc.id);refresh();}
 function closeModal(){if(ui.modal==='bundle'){const b=bById(ui.be);if(b&&!b.items.length&&!b.members.length){S.bundles=S.bundles.filter(x=>x!==b);save();}ui.be=null;ui.split=null;}
   ui.modal=null;ui.draft=null;render();}
 /* ---------- events ---------- */
@@ -1039,15 +1061,15 @@ document.addEventListener('click',e=>{
     case 'bgo':{const el=document.getElementById('b-'+id);if(!el){const st=bState(bById(id));if(st.k==='done'){S.doneOpen=true;save();render();}}
       const e2=document.getElementById('b-'+id);if(e2){e2.scrollIntoView({block:'center',behavior:'smooth'});e2.classList.remove('flash');void e2.offsetWidth;e2.classList.add('flash');}break;}
     case 'wo':ui.wo=+t.dataset.v;render();break;
-    case 'dfold':S.doneOpen=!S.doneOpen;save();render();break;
+    case 'dfold':if(pfOn()){const o=ui.pfDone!==false;ui.pfDone=!o;}else{S.doneOpen=!S.doneOpen;save();}render();break;
     case 'padd':{const used=new Set(S.bundles.map(b=>b.color));const b={id:uid('b'),name:'',color:COLORS.find(x=>!used.has(x))||COLORS[S.bundles.length%COLORS.length],members:[],open:0,cross:false,memo:'',sched:{t:'none'},items:[]};
       S.bundles.push(b);ui.be=b.id;ui.split=null;ui.pick=false;ui.modal='bundle';save();render();setTimeout(()=>{const i=document.getElementById('bmn');i&&i.focus();});break;}
-    case 'bed':{ui.be=id;ui.split=null;ui.pick=t.dataset.f==='add';ui.modal='bundle';render();
+    case 'bed':{ui.be=id;ui.split=null;ui.pick=t.dataset.f==='add';ui.modal='bundle';render();if(t.dataset.f==='mem')setTimeout(()=>{const i=document.getElementById('bmn');i&&i.focus();});
       setTimeout(()=>{const m=document.querySelector('.bm');if(!m)return;const f=t.dataset.f;const el=f==='sch'?m.querySelector('.sed'):f==='add'?m.querySelector('.pick'):null;if(el&&innerWidth<600)el.scrollIntoView({block:'center'});});break;}
     case 'bmadd':{const b=bById(ui.be),i=document.getElementById('bmn');const n=(i&&i.value||'').trim();if(!b||!n){i&&i.focus();break;}
       if(!b.members.includes(n)&&b.members.length<5){b.members.push(n);if(b.open)b.open--;b.open=Math.min(b.open,5-b.members.length);}save();render();lookupPeople([n]);setTimeout(()=>{const z=document.getElementById('bmn');z&&z.focus();});break;}
-    case 'pf':{const v=t.dataset.v,i=ui.pf.indexOf(v);if(i>=0)ui.pf.splice(i,1);else ui.pf.push(v);render();break;}
-    case 'pfc':ui.pf=[];render();break;
+    case 'pf':{const v=t.dataset.v,i=ui.pf.indexOf(v);if(i>=0)ui.pf.splice(i,1);else ui.pf.push(v);ui.pfDone=null;savePf();render();break;}
+    case 'pfc':ui.pf=[];ui.pfDone=null;savePf();render();break;
     case 'bxa':{const b=bById(ui.be);b.xo=false;const a=autoCross(b);if(a!==null)b.cross=a;save();render();break;}
     case 'bmdel':{const b=bById(ui.be);b.members.splice(+t.dataset.v,1);save();render();break;}
     case 'bopen':{const b=bById(ui.be);b.open=Math.max(0,Math.min(5-b.members.length,(b.open||0)+ +t.dataset.d));save();render();break;}
@@ -1098,18 +1120,23 @@ document.addEventListener('click',e=>{
     case 'mlook':{const q=document.getElementById('mq').value.trim();if(!q)break;ui.man.q=q;ui.man.busy=true;render();lookupName(q).then(r=>{ui.man.res=r;}).catch(er=>{ui.man.res=null;toast(er.message);}).finally(()=>{ui.man.busy=false;render();});break;}
     case 'madd':{const mq=document.getElementById('mq');const q=(mq&&mq.value||'').trim();if(!q){mq&&mq.focus();break;}if(ui.man.busy)break;
       const img=document.getElementById('mimg')?document.getElementById('mimg').value.trim():'';
-      const add=r=>{const nc={id:uid('c'),alias:'',name:(r&&r.name)||q,cls:r?r.cls:'',level:r?r.level:'',img,manual:true,custom:true,sel:{},monthly:null,fill:false};
+      const add=r=>{const nm=(r&&r.name)||q;if(dupCard(nm))return;const x=key&&account.find(a=>a.name===nm);if(x){addAccChar(x,r);return;}
+        const nc={id:uid('c'),alias:'',name:nm,cls:r?r.cls:'',level:r?r.level:'',img,manual:true,custom:true,sel:{},monthly:null,fill:false};
         S.chars.push(nc);if(r)S.cache[nc.id]={ocid:r.ocid,img:r.img,level:r.level,cls:r.cls,world:r.world,t:r.t||Date.now()};ui.modal=null;save();render();};
-      if(ui.man.res&&ui.man.res.name===q){add(ui.man.res);break;}
-      ui.man.q=q;ui.man.img=img;ui.man.busy=true;render();
-      lookupName(q).then(r=>{ui.man.busy=false;add(r);}).catch(er=>{ui.man.busy=false;ui.man.res=null;if(/찾을 수 없음/.test(er.message)){render();toast(er.message);}else{add(null);toast(er.message);}});
+      if(dupCard(q))break;
+      ui.man.q=q;ui.man.img=img;
+      (async()=>{if(key&&!account.length){ui.man.busy=true;render();try{await loadAccount();}catch(_){}ui.man.busy=false;}
+        const x=key&&account.find(a=>a.name===q);if(x){addAccChar(x,ui.man.res&&ui.man.res.name===q?ui.man.res:null);return;}
+        if(ui.man.res&&ui.man.res.name===q){add(ui.man.res);return;}
+        ui.man.busy=true;render();
+        lookupName(q).then(r=>{ui.man.busy=false;add(r);}).catch(er=>{ui.man.busy=false;ui.man.res=null;if(/찾을 수 없음/.test(er.message)){render();toast(er.message);}else{add(null);toast(er.message);}});})();
       break;}
     case 'compact':S.compact=t.checked;save();render();break;
     case 'exp':{const o={...S};if(document.getElementById('xk').checked)o.apiKey=key;dlJson(o,'boss-scheduler-'+stamp()+'.json');break;}
     case 'imp':document.getElementById('file').click();break;
     case 'reset':{const has=S.chars.length||S.bundles.length;if(ui.busy||!confirm(has?'캐릭터·파티·API 키를 모두 지울까? 지우기 전에 백업 파일을 내려받아.':'이 파일에 저장된 데이터를 모두 지울까?'))break;
       if(has)dlJson(S,'boss-scheduler-backup-'+stamp()+'.json');}
-      [LS,LS1,LSK,LS+'.bak'].forEach(k=>localStorage.removeItem(k));key='';account=[];pq.length=0;
+      [LS,LS1,LSK,LS+'.bak',LSPF].forEach(k=>localStorage.removeItem(k));key='';account=[];pq.length=0;
       S=normalize(null);Object.assign(ui,{modal:null,draft:null,be:null,split:null,pick:false,pf:[],wo:0,err:'',bc:null});render();break;
   }
 });
