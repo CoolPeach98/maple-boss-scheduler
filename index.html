@@ -222,6 +222,7 @@ select.in{padding:0 4px}
 .bt b+.who{font-weight:500;color:var(--mu);font-size:12px}
 .bt .who i{font-style:normal;color:var(--mu2);font-weight:500}
 .bt .who.nm{color:var(--mu2);font-weight:500;font-size:12px}
+.mh .dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--acc);margin-right:7px;vertical-align:middle;position:relative;top:-1px}
 .bt .dot{width:8px;height:8px;border-radius:50%;flex:none;align-self:center;background:var(--acc)}
 .bt .who.bo{font-weight:600}
 .bh .pa{flex:none;border:0;background:none;padding:0 2px;font-size:11px;color:var(--mu2);white-space:nowrap}
@@ -596,6 +597,9 @@ const GRACE=3*H;
 const bById=id=>S.bundles.find(b=>b.id===id);
 const bSize=b=>Math.min(6,1+b.members.length+(b.open||0));
 const bLabel=b=>b.name||b.members.join(' · ');
+const myNames=b=>[...new Set(b.items.map(i=>i.c).filter(Boolean))].sort((x,y)=>chIdx(x)-chIdx(y)).map(id=>charById(id)).filter(Boolean).map(nick);
+const bText=b=>b.name||b.members.join(' · ')||myNames(b).join('·');
+function bTextH(b){const t=bText(b);if(!t)return '';return S.bundles.some(x=>x!==b&&bText(x)===t)?t+' · '+schedMini(b.sched):t;}
 /* people: world lookup (cached in S.ppl) -> automatic 월드 통합; a manual checkbox (xo) wins */
 const pWorld=n=>(S.ppl[n]||{}).w||'';
 function myWorlds(b){const w=new Set();for(const it of b.items){const c=charById(it.c);const x=c&&((S.cache[c.id]||{}).world||c.world);if(x)w.add(x);}
@@ -801,7 +805,7 @@ function tile(c,s,mon){
   if(bb){const sc=schedOf(bb,it);when=schedTxt(sc);
     if(!st.cleared){const ws=weekStartKst(),o=occ(sc,ws);
       if(o&&o.at>=ws&&o.at<ws+7*D){const i=dayOfMs(o.day),late=passed(o,kst().getTime());dy=`<span class="dy ${late?'late':i===todayIdx()?'td':''}">${DAYS[i]}</span>`;}}}
-  const tip=`${DIFF_KO[s.d]} ${s.b} · ${bb?bSize(bb):s.n}인\n`+(st.cleared?'✓ 클리어':'미클리어')+(man?` (직접 체크 · 게임 기록: ${st.auto?'클리어':'미클리어'})`:'')+(st.mismatch?`\n게임 스케줄러 난이도: ${DIFF_KO[st.apiD]}`:'')+(bb?`\n${bLabel(bb)?bLabel(bb)+' · ':''}${when}`:'')+`\n클릭: ${man?'게임 기록으로 되돌리기':st.cleared?'미클리어로 변경':'클리어로 체크'}`;
+  const tip=`${DIFF_KO[s.d]} ${s.b} · ${bb?bSize(bb):s.n}인\n`+(st.cleared?'✓ 클리어':'미클리어')+(man?` (직접 체크 · 게임 기록: ${st.auto?'클리어':'미클리어'})`:'')+(st.mismatch?`\n게임 스케줄러 난이도: ${DIFF_KO[st.apiD]}`:'')+(bb?`\n${bText(bb)?bText(bb)+' · ':''}${when}`:'')+`\n클릭: ${man?'게임 기록으로 되돌리기':st.cleared?'미클리어로 변경':'클리어로 체크'}`;
   const fc=pfOn()?(bb&&pfMatch(bb)?'fhl':'fdim'):'';
   return `<button class="tile ${st.cleared?'clr':'rem'} ${bb?'grp':''} ${fc} ${ui.flash===c.id+'|'+s.b?'flash':''}" title="${esc(tip)}" aria-label="${esc(nick(c)+' '+DIFF_KO[s.d]+' '+s.b+(st.cleared?' 클리어':' 미클리어'))}" aria-pressed="${st.cleared}" data-act="tog" data-c="${c.id}" data-b="${s.b}" ${bb?`style="--g:${bb.color}"`:''}>${ic(s.b)}<span class="bg ${s.d}">${DIFF_LT[s.d]}</span>${!bb&&s.n>1?`<span class="ps">${s.n}</span>`:''}${man?'<span class="mn">수동</span>':''}${dy}</button>`;
 }
@@ -810,11 +814,8 @@ const chIdx=id=>{const i=S.chars.findIndex(c=>c.id===id);return i<0?99:i;};
 const itemSort=(x,y)=>ORDER[x.b]-ORDER[y.b]||chIdx(x.c)-chIdx(y.c);
 const bBosses=b=>[...new Set(b.items.slice().sort((x,y)=>ORDER[x.b]-ORDER[y.b]).map(i=>i.b))].join('·');
 function bTitle(b){const n=b.name?`<b>${esc(b.name)}</b>`:'';const ms=b.members.length?`<span class="who">${b.members.map(esc).join(' · ')}${b.open?` <i>+${b.open}</i>`:''}</span>`:'';if(n||ms)return n+ms;
-  const bs=bBosses(b);if(!bs)return '<span class="who nm">+ 파티원</span>';
-  // same boss list as another unnamed party -> add my characters to tell them apart
-  const twin=S.bundles.some(x=>x!==b&&!x.name&&!x.members.length&&bBosses(x)===bs);
-  const mine=twin?[...new Set(b.items.map(i=>i.c).filter(Boolean))].sort((x,y)=>chIdx(x)-chIdx(y)).map(id=>charById(id)).filter(Boolean).map(nick).join('·'):'';
-  return `<span class="dot"></span><span class="who bo">${esc(bs)}${mine?` <i>${esc(mine)}</i>`:''}</span>`;}
+  // nobody named yet: my characters in it (schedule and colour on the same row tell twins apart)
+  const my=myNames(b).join('·');return my?`<span class="dot"></span><span class="who bo">${esc(my)}</span>`:'<span class="who nm">+ 파티원</span>';}
 function bundleCard(b,st,next,off=0){
   const ws=weekStartKst()+off*7*D,now=kst().getTime(),ti=todayIdx();
   const its=b.items.slice().sort(itemSort),sz=bSize(b);
@@ -830,7 +831,7 @@ function bundleCard(b,st,next,off=0){
     if(S.compact)return `<button class="bti ${done?'clr':''}" data-act="itog" data-id="${b.id}" data-i="${it.id}" aria-pressed="${done}" title="${esc(DIFF_KO[d]+' '+it.b+' · '+(c?nick(c):'캐릭터 미정'))}">${ic(it.b)}<span class="bg ${d}">${DIFF_LT[d]}</span></button>`;
     return `<div class="bro ${done?'done':''}">${icon(it.b,24,d,'s')}<span class="bb">${esc(it.b)}<i>${DIFF_KO[d]}</i></span><span class="bc ${c?'':'nm'}">${c?esc(nick(c)):'캐릭터 미정'}</span>${it.o?`<span class="ot ${ol?'late':''}">${esc(schedTxt(it.o,1))}</span>`:''}${off?'<span></span>':`<button class="pk ${done?'on':''}" data-act="itog" data-id="${b.id}" data-i="${it.id}" aria-pressed="${done}" aria-label="${esc(it.b+(done?' 클리어 취소':' 클리어 체크'))}"></button>`}</div>`;}).join('');
   return `<div class="bk ${allDone?'done':''} ${off?'nx':''} ${next?'next':''} ${ui.flashB===b.id?'flash':''}" id="b-${b.id}" style="--acc:${b.color}">
-    <div class="bh"><button class="bt" data-act="bed" data-id="${b.id}" title="${esc(bLabel(b)||bBosses(b))}">${bTitle(b)}</button>${!b.name&&!b.members.length&&b.items.length?`<button class="pa" data-act="bed" data-id="${b.id}" data-f="mem">+ 파티원</button>`:''}${isX(b)?'<span class="xw">통합</span>':''}<span class="sz">${sz}인</span>
+    <div class="bh"><button class="bt" data-act="bed" data-id="${b.id}" title="${esc(bTextH(b))}">${bTitle(b)}</button>${!b.name&&!b.members.length&&myNames(b).length?`<button class="pa" data-act="bed" data-id="${b.id}" data-f="mem">+ 파티원</button>`:''}${isX(b)?'<span class="xw">통합</span>':''}<span class="sz">${sz}인</span>
       <button class="bs ${b.sched.t} ${sLate?'late':''} ${sToday?'td':''} ${st.late?'late':''}" data-act="bed" data-id="${b.id}" data-f="sch">${b.sched.t==='fix'?'<i>매주</i>':''}${esc(b.sched.t==='none'?'미정':schedTxt(b.sched,1))}</button></div>
     ${b.memo?`<div class="bmemo">${esc(b.memo)}</div>`:''}
     <div class="brs ${S.compact?'cp':''}">${rows||`<button class="btn sm ghost" data-act="bed" data-id="${b.id}" data-f="add">${I.plus}보스</button>`}</div>
@@ -849,7 +850,7 @@ function strip(off){
       if(o&&!o.nt&&o.day===ws+day*D)at=o.at;
       const x=g[day]=g[day]||{day,at:null,n:0,d:0,bs:[]};x.n++;if(!x.bs.includes(it.b))x.bs.push(it.b);if(done)x.d++;if(at!=null&&(x.at==null||at<x.at))x.at=at;}
     for(const x of Object.values(g))cells[x.day].push({b,...x});}
-  return `<div class="wdays">${cells.map((cs,i)=>`<div class="wd ${off===0&&i===ti?'today':''} ${off===0&&i<ti?'past':''}"><div class="wdh"><b>${DAYS[i]}</b><span>${md(ws+i*D)}</span></div>${cs.sort((x,y)=>(x.at??9e15)-(y.at??9e15)).map(x=>{const done=x.d===x.n;const tm=x.at!=null?new Date(x.at).toISOString().slice(11,16):'';return `<button class="wc ${done?'done':''} ${pfOn()?(pfMatch(x.b)?'hl':'dim'):''}" style="--c:${x.b.color}" data-act="bgo" data-id="${x.b.id}" title="${esc((bLabel(x.b)?bLabel(x.b)+' · ':'')+x.bs.join(', '))}">${tm?`<b>${tm}</b>`:''}<span>${esc(bLabel(x.b)||x.bs.sort((a,b)=>ORDER[a]-ORDER[b]).join('·'))}</span>${bLabel(x.b)&&x.n>1?`<em>${x.n}</em>`:''}</button>`;}).join('')}</div>`).join('')}</div>`;
+  return `<div class="wdays">${cells.map((cs,i)=>`<div class="wd ${off===0&&i===ti?'today':''} ${off===0&&i<ti?'past':''}"><div class="wdh"><b>${DAYS[i]}</b><span>${md(ws+i*D)}</span></div>${cs.sort((x,y)=>(x.at??9e15)-(y.at??9e15)).map(x=>{const done=x.d===x.n;const tm=x.at!=null?new Date(x.at).toISOString().slice(11,16):'';return `<button class="wc ${done?'done':''} ${pfOn()?(pfMatch(x.b)?'hl':'dim'):''}" style="--c:${x.b.color}" data-act="bgo" data-id="${x.b.id}" title="${esc((bText(x.b)?bText(x.b)+' · ':'')+x.bs.join(', '))}">${tm?`<b>${tm}</b>`:''}<span>${esc(bLabel(x.b)||x.bs.sort((a,b)=>ORDER[a]-ORDER[b]).join('·'))}</span>${bLabel(x.b)&&x.n>1?`<em>${x.n}</em>`:''}</button>`;}).join('')}</div>`).join('')}</div>`;
 }
 function partySection(){
   const wo=ui.wo||0,ws=weekStartKst()+wo*7*D;
@@ -901,9 +902,9 @@ function bundleModal(){
       <button class="btn sm ghost" data-act="idel" data-i="${it.id}" aria-label="빼기">${I.x}</button></div>${sp?schedEd(it.o,it.id):''}</div>`;}).join('');
   const pick=S.chars.map(c=>{const sl=slots(c),m=monthlySlot(c);const all=[...sl,...(m?[m]:[])];if(!all.length)return '';
     return `<div class="pkr"><span class="pn" title="${esc(nick(c))}">${esc(nick(c))}</span><div class="pts">${all.map(s=>{const [ob]=itemOf(c.id,s.b);const mine=ob===b;
-      return `<button class="pt ${mine?'on':''} ${ob&&!mine?'oth':''}" ${ob&&!mine?`style="--g:${ob.color}"`:''} data-act="ipick" data-c="${c.id}" data-b="${s.b}" aria-pressed="${mine}" title="${esc(DIFF_KO[s.d]+' '+s.b+(ob&&!mine?' · '+(bLabel(ob)||'다른 파티'):''))}">${ic(s.b)}<span class="bg ${s.d}">${DIFF_LT[s.d]}</span></button>`;}).join('')}</div></div>`;}).join('');
+      return `<button class="pt ${mine?'on':''} ${ob&&!mine?'oth':''}" ${ob&&!mine?`style="--g:${ob.color}"`:''} data-act="ipick" data-c="${c.id}" data-b="${s.b}" aria-pressed="${mine}" title="${esc(DIFF_KO[s.d]+' '+s.b+(ob&&!mine?' · '+(bTextH(ob)||'다른 파티'):''))}">${ic(s.b)}<span class="bg ${s.d}">${DIFF_LT[s.d]}</span></button>`;}).join('')}</div></div>`;}).join('');
   return `<div class="mb" data-act="close"><div class="md wide bm" data-stop="1" style="--acc:${b.color}">
-    <div class="ph"><h2 class="mh">${esc(b.items.length||b.members.length?bShort(b):'새 파티')}</h2><span class="ctr">${sz}인</span><span class="mt">${won(its.reduce((a,it)=>a+share(it.b,itemDiff(it),sz),0))}</span><span class="sp"></span><button class="btn sm ghost" data-act="close" aria-label="닫기">${I.x}</button></div>
+    <div class="ph"><h2 class="mh">${!b.name&&!b.members.length&&myNames(b).length?'<span class="dot"></span>':''}${esc(bText(b)||'새 파티')}</h2><span class="ctr">${sz}인</span><span class="mt">${won(its.reduce((a,it)=>a+share(it.b,itemDiff(it),sz),0))}</span><span class="sp"></span><button class="btn sm ghost" data-act="close" aria-label="닫기">${I.x}</button></div>
     <div class="bd">
       <div class="erow"><span class="lbl">파티원</span><div class="mems">${b.members.map((n,i)=>`<span class="mchip">${esc(n)}${pWorld(n)?`<small>${esc(pWorld(n))}</small>`:''}<button data-act="bmdel" data-v="${i}" aria-label="${esc(n)} 빼기">${I.x}</button></span>`).join('')}
         ${b.members.length<5?`<input class="in" id="bmn" list="bppl" style="width:130px" placeholder="닉네임" maxlength="12"><datalist id="bppl">${known.map(n=>`<option value="${esc(n)}">`).join('')}</datalist><button class="btn sm" data-act="bmadd">추가</button>`:''}
@@ -1088,7 +1089,7 @@ document.addEventListener('click',e=>{
     case 'idel':{const b=bById(ui.be);b.items=b.items.filter(x=>x.id!==t.dataset.i);save();render();break;}
     case 'ipick':{const b=bById(ui.be);const [ob,oit]=itemOf(c,t.dataset.b);
       if(ob===b)b.items=b.items.filter(x=>x!==oit);
-      else{if(ob){ob.items=ob.items.filter(x=>x!==oit);toast(`${t.dataset.b} · ${bLabel(ob)||'다른 파티'}에서 옮김`,1);}b.items.push({id:uid('i'),b:t.dataset.b,c,d:'',o:null,dk:null});}
+      else{if(ob){ob.items=ob.items.filter(x=>x!==oit);toast(`${t.dataset.b} · ${bTextH(ob)||'다른 파티'}에서 옮김`,1);}b.items.push({id:uid('i'),b:t.dataset.b,c,d:'',o:null,dk:null});}
       save();render();break;}
     case 'bdel':{const b=bById(ui.be);if(!b)break;if(b.items.length&&!confirm('이 파티를 삭제할까?'))break;const snap=JSON.stringify(S);S.bundles=S.bundles.filter(x=>x!==b);ui.modal=null;ui.be=null;save();render();if(b.items.length)undoToast('파티 삭제됨',snap);break;}
 
