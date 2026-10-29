@@ -139,6 +139,7 @@ select.in{padding:0 4px}
 .ac:hover{border-color:var(--line2)}
 .ac.on{border-color:var(--ac);background:#fff}
 .ac.has{opacity:.35;pointer-events:none}
+.ac .cvl{position:absolute;right:7px;top:6px;font-size:10px;font-weight:600;color:var(--mu)}
 .ac .im{width:96px;height:80px;background-repeat:no-repeat}
 .ac b{font-size:13px}
 .ac span{font-size:12px;color:var(--mu)}
@@ -472,8 +473,22 @@ function normalize(s){
     const members=[...new Set((Array.isArray(b.members)?b.members:[]).map(x=>String(x).trim()).filter(Boolean))].slice(0,5);
     return {id:b.id,name:String(b.name||''),color:/^#[0-9a-f]{6}$/i.test(b.color||'')?b.color:COLORS[0],members,open:Math.max(0,Math.min(5-members.length,+b.open||0)),cross:!!b.cross,xo:!!b.xo,memo:String(b.memo||''),
       sched:validS(b.sched)||{t:'none'},items:(Array.isArray(b.items)?b.items:[]).filter(it=>it&&BMAP[it.b]).map(it=>({id:it.id||uid('i'),b:it.b,c:cids.has(it.c)?it.c:null,d:BMAP[it.b].d.includes(it.d)?it.d:'',o:validS(it.o,1),dk:it.dk||null}))};});
+  reconcile(s);
   return s;
 }
+// boss list of a character is known (custom plan, or in-game scheduler already fetched)
+const planKnown=(c,st=S)=>c.custom||!!((st.cache[c.id]||{}).regW||[]).length;
+const slotOf=(c,b,st=S)=>BMAP[b].monthly?monthlySlot(c,st):slots(c,st).find(x=>x.b===b)||null;
+// character's difficulty for a boss (converts a scheduler-following character to a custom plan)
+function setCharDiff(c,b,d,st=S){
+  if(!c.custom){const sl=slots(c,st),m=monthlySlot(c,st);c.sel={};for(const x of sl)c.sel[x.b]={d:x.d,n:x.n};c.monthly=m?{d:m.d,n:m.n}:null;c.custom=true;c.fill=false;}
+  if(BMAP[b].monthly)c.monthly={d,n:(c.monthly&&c.monthly.n)||1};
+  else{if(!c.sel[b]&&Object.keys(c.sel).length>=12)return false;c.sel[b]={d,n:(c.sel[b]&&c.sel[b].n)||1};}
+  c.edited=Date.now();return true;}
+function reconcile(st){
+  for(const b of st.bundles)b.items=b.items.filter(it=>{const c=it.c&&st.chars.find(x=>x.id===it.c);if(!c||!planKnown(c,st))return true;
+    const sl=slotOf(c,it.b,st);if(!sl)return false;
+    if(it.d&&it.d!==sl.d)setCharDiff(c,it.b,it.d,st);it.d='';return true;});}
 let S=load();
 let key=localStorage.getItem(LSK)||'';
 let ui={tf:{b:'',c:''},be:null,split:null,wo:0,pf:[],flashB:null,modal:null,busy:false,err:'',mf:null,pop:null,bc:null,draft:null,acc:{sel:{},world:'all',low:false,q:''},man:{q:'',res:null,busy:false},mem:null};
@@ -488,14 +503,14 @@ function resetCheck(){let ch=false;
 const charById=id=>S.chars.find(c=>c.id===id);
 
 /* ---------- slots / status ---------- */
-function slots(c){
+function slots(c,st=S){
   if(c.custom) return Object.entries(c.sel||{}).filter(([b])=>BMAP[b]&&!BMAP[b].monthly).sort((a,b)=>ORDER[a[0]]-ORDER[b[0]]).slice(0,12).map(([b,p])=>({b,d:p.d,n:p.n||1}));
-  const cc=S.cache[c.id]; if(!cc||!cc.regW) return [];
+  const cc=st.cache[c.id]; if(!cc||!cc.regW) return [];
   return cc.regW.slice(0,12).map(x=>({b:x.b,d:x.d,n:1}));
 }
-function monthlySlot(c){
+function monthlySlot(c,st=S){
   if(c.custom) return c.monthly?{b:MONTHLY.id,d:c.monthly.d,n:c.monthly.n||1}:null;
-  const cc=S.cache[c.id]; const r=cc&&cc.sched&&cc.sched[MONTHLY.id];
+  const cc=st.cache[c.id]; const r=cc&&cc.sched&&cc.sched[MONTHLY.id];
   return r&&r.reg?{b:MONTHLY.id,d:r.reg,n:1}:null;
 }
 const ovStore=b=>BMAP[b]&&BMAP[b].monthly?S.ov.mo:S.ov.w;
@@ -593,7 +608,7 @@ const pfOn=()=>ui.pf.length>0;
 const pfMatch=b=>!pfOn()||b.members.some(n=>ui.pf.includes(n));
 const bShort=b=>bLabel(b)||[...new Set(b.items.slice().sort((x,y)=>ORDER[x.b]-ORDER[y.b]).map(i=>i.b))].join('·')||'파티';
 function itemOf(cid,boss){for(const b of S.bundles){const it=b.items.find(x=>x.c===cid&&x.b===boss);if(it)return [b,it];}return [null,null];}
-function itemDiff(it){if(it.d)return it.d;const c=charById(it.c);if(c){const s=(BMAP[it.b].monthly?[monthlySlot(c)]:slots(c)).find(x=>x&&x.b===it.b);if(s)return s.d;}const d=BMAP[it.b].d;return d[d.length-1];}
+function itemDiff(it){const c=charById(it.c);if(c){const s=slotOf(c,it.b);if(s)return s.d;}if(it.d)return it.d;const d=BMAP[it.b].d;return d[d.length-1];}
 const cycleKey=b=>BMAP[b].monthly?monthKey():weekKey();
 function itemDone(it){const c=charById(it.c);return c?status(c,it.b).cleared:it.dk===cycleKey(it.b);}
 function setItem(it,val){const c=charById(it.c);if(c)setClear(c.id,it.b,val);else it.dk=val?cycleKey(it.b):null;}
@@ -673,28 +688,29 @@ async function loadAccount(){
   for(const a of (L.account_list||[]))for(const c of (a.character_list||[]))account.push({name:c.character_name,ocid:c.ocid,cls:c.character_class,level:c.character_level,world:c.world_name});
   account.sort((a,b)=>b.level-a.level);
 }
-async function refresh(){
-  if(!key){await wrefresh(true);return;}
+async function refresh(light){
+  if(!key){if(!light)await wrefresh(true);return;}
   ui.busy=true;ui.err='';render();
   const errs=[];
   const fatal=m=>/키가|권한|한도|서버|네트워크|점검/.test(m);
   let stop='';
-  try{await loadAccount();}catch(e){if(fatal(e.message)){ui.err=e.message;ui.busy=false;render();return;}errs.push(e.message);}
+  if(!light)try{await loadAccount();}catch(e){if(fatal(e.message)){ui.err=e.message;ui.busy=false;render();return;}errs.push(e.message);}
   await pool(S.chars,async c=>{
     if(!c.name||stop)return;
     const cc=S.cache[c.id]=S.cache[c.id]||{};
     let ocid=(account.find(a=>a.name===c.name)||{}).ocid||cc.ocid;
+    if(light&&(!ocid||c.manual))return;
     try{
       if(!ocid)ocid=(await api('/id',{character_name:c.name})).ocid;
       cc.ocid=ocid;
-      const b=await api('/character/basic',{ocid});if(b.character_name&&b.character_name!==c.name&&!c.manual){c.name=b.character_name;}Object.assign(cc,{img:b.character_image,level:b.character_level,cls:b.character_class,world:b.world_name});
-      S.imgs[c.name]=b.character_image;
+      if(!light||!cc.img){const b=await api('/character/basic',{ocid});if(b.character_name&&b.character_name!==c.name&&!c.manual){c.name=b.character_name;}Object.assign(cc,{img:b.character_image,level:b.character_level,cls:b.character_class,world:b.world_name});
+      S.imgs[c.name]=b.character_image;}
       if(!c.manual){
         const live=await api('/scheduler/character-state',{ocid});
         // Until a character logs in after the Thursday reset, today's data has no weekly entries.
         // Walk back day by day (max 14) to the latest snapshot that has weekly registrations.
         let j=live,src=null;
-        if(!hasWeekly(live)){for(let i=1;i<=14;i++){const ds=kstDate(i);let x;try{x=await api('/scheduler/character-state',{ocid,date:ds});}catch(e){if(fatal(e.message))throw e;continue;}if(hasWeekly(x)){j=x;src=ds;break;}}}
+        if(!hasWeekly(live)){const ds0=[...new Set([cc.src,...Array.from({length:14},(_,i)=>kstDate(i+1))].filter(Boolean))];for(const ds of ds0){let x;try{x=await api('/scheduler/character-state',{ocid,date:ds});}catch(e){if(fatal(e.message))throw e;continue;}if(hasWeekly(x)){j=x;src=ds;break;}}}
         const inWeek=!src||src>=weekKey(), inMonth=!src||src.slice(0,7)===monthKey();
         const p=parseSched(j),pl=parseSched(live);
         for(const [b,v] of Object.entries(p.sched)){if(BMAP[b].monthly){if(pl.sched[b])p.sched[b]=pl.sched[b];else if(!inMonth)v.clr=null;}else if(!inWeek)v.clr=null;}
@@ -705,6 +721,7 @@ async function refresh(){
           for(const b of need)if(mine[b]==null)mine[b]=ti;
           for(const b of Object.keys(mine))if(!(p.sched[b]&&p.sched[b].clr)&&((S.ov.w.m[c.id]||{})[b])!==true)delete mine[b];}
         cc.sched=p.sched;cc.regW=p.regW;cc.wk=weekKey();cc.mk=monthKey();cc.weekly=inWeek?(j.weekly_boss_clear_count||0):0;cc.src=src;cc.noLogin=!!src&&!inWeek;
+        if(c.conv){for(const store of [S.ov.w,S.ov.mo]){const m=store.m[c.id]||{};for(const b of Object.keys(m)){const st=status(c,b);if(st.o===st.auto)delete m[b];}}delete c.conv;}
         if(c.fill&&c.custom&&p.regW.length){const sel=c.sel||(c.sel={});for(const x of p.regW){if(Object.keys(sel).length>=12)break;if(!sel[x.b])sel[x.b]={d:x.d,n:1};}c.fill=false;}
       }
     }catch(e){if(fatal(e.message)){stop=e.message;}else errs.push(c.name+': '+e.message);}
@@ -752,7 +769,7 @@ const SV=(d,w=14)=>`<svg class="i" viewBox="0 0 24 24" style="width:${w}px;heigh
 const I={chev:SV('<path d="M9 6l6 6-6 6"/>',13),x:SV('<path d="M6 6l12 12M18 6L6 18"/>'),l:SV('<path d="M15 6l-6 6 6 6"/>'),r:SV('<path d="M9 6l6 6-6 6"/>'),
   ref:SV('<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 5v6h-6"/>',13),plus:SV('<path d="M12 5v14M5 12h14"/>',13)};
 const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-const SIL="data:image/svg+xml,"+encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300'><g fill='#c9c9c2'><circle cx='146' cy='146' r='22'/><path d='M118 200c0-20 12-30 28-30s28 10 28 30z'/></g></svg>");
+const SIL="data:image/svg+xml,"+encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300'><g fill='#c9c9c2'><circle cx='146' cy='146' r='22'/><path d='M118 200c0-20 12-30 28-30s28 10 28 30z'/></g></svg>").replace(/'/g,'%27');
 function charImg(c){const cc=S.cache[c.id]||{};return c.img||cc.img||S.imgs[c.name]||'';}
 // show region of 300x300 character image centered at (cx,cy) natural px, zoom z
 const isAv=u=>/^https:\/\/avatar\.maplestory\.nexon\.com\//.test(u||'');
@@ -862,7 +879,7 @@ function bundleModal(){
   const sw=COLORS.map(col=>`<span class="sw ${b.color===col?'on':''}" style="background:${col}" data-act="bcol" data-v="${col}" role="button" aria-label="색"></span>`).join('');
   const rows=its.map(it=>{const c=charById(it.c),d=itemDiff(it),sp=ui.split===it.id;
     return `<div class="ero ${sp?'sp':''}"><div class="row">${icon(it.b,24,d,'s')}<span class="bb">${esc(it.b)}</span>
-      <select class="in dsel" data-if="d" data-i="${it.id}" aria-label="난이도"><option value="">${DIFF_KO[itemDiff({...it,d:''})]}</option>${BMAP[it.b].d.map(x=>`<option value="${x}" ${it.d===x?'selected':''}>${DIFF_KO[x]}</option>`).join('')}</select>
+      <select class="in dsel" data-if="d" data-i="${it.id}" aria-label="난이도">${BMAP[it.b].d.map(x=>`<option value="${x}" ${d===x?'selected':''}>${DIFF_KO[x]}</option>`).join('')}</select>
       <span class="bc ${c?'':'nm'}">${c?esc(nick(c)):'캐릭터 미정'}</span><span class="sp"></span>
       <button class="btn sm ${it.o?'':'ghost'} ${sp?'on':''}" data-act="isplit" data-i="${it.id}">${it.o?esc(schedTxt(it.o,1)):'따로'}</button>
       <button class="btn sm ghost" data-act="idel" data-i="${it.id}" aria-label="빼기">${I.x}</button></div>${sp?schedEd(it.o,it.id):''}</div>`;}).join('');
@@ -900,7 +917,7 @@ function render(){
       <div class="av${isAv(im)?' ax':''}" style="${im?bodyStyle(im,84,96):`background:url('${SIL}') center 60%/150px no-repeat,var(--panel2)`}">${c.manual?'<span class="tg2">직접 체크</span>':''}</div>
       <div class="cb"><div class="ci"><div class="cn"><span class="al ${c.name?'':'nn'}" title="${esc(nick(c))}">${esc(nick(c))}</span>${c.name?'':`<button class="btn sm nnb" data-act="bset" data-c="${c.id}" data-f="name">닉네임 입력</button>`}<span class="lv">${esc(job(c))}</span></div>
         ${(()=>{const r=revenue(c);return `<div class="rev"><b>${won(r.wkC)}</b><span>/ ${won(r.wk)}</span>${r.mo?`<em>월간 ${r.moC?'<b>'+won(r.moC)+'</b>':won(r.mo)}</em>`:''}</div>`;})()}
-        <div class="cnt"><div class="bar"><i style="width:${cnt/12*100}%"></i></div><b>${cnt}<span>/12</span></b><span class="rem ${rem.length?'':'z'}">${rem.length?rem.length+' 남음':'완료'}</span></div></div>
+        <div class="cnt"><div class="bar"><i style="width:${cnt/12*100}%"></i></div><b>${cnt}<span>/12</span></b>${(sl.length||mon)&&!rem.length?'<span class="rem z">완료</span>':''}</div></div>
       <div class="slots">${ts}</div></div></div>`;
   }
   const empty=!S.chars.length;
@@ -929,6 +946,7 @@ function render(){
   </div>${modalHtml()}`;
   ui.flash=null;ui.flashB=null;
   if(fid){const e=document.getElementById(fid.id);if(e){e.value=fid.v;e.focus();try{e.setSelectionRange(fid.s,fid.s);}catch(_){}}}
+  observeAcc();
 }
 
 function bossModal(){
@@ -949,7 +967,7 @@ function bossModal(){
       <div class="bl">${WEEKLY.map(b=>row(b,false)).join('')}</div>
       <div class="bl">${row(MONTHLY,true)}</div>
     </div>
-    <div class="ft">${c.manual?'':`<button class="btn" data-act="breset">스케줄러 기준으로 되돌리기</button>`}<button class="btn" data-act="bclear">전체 해제</button><span class="sp"></span><button class="btn" data-act="close">취소</button><button class="btn pri" data-act="bsave">저장</button></div>
+    <div class="ft">${c.manual?'':`<button class="btn" data-act="breset">스케줄러 기준으로 되돌리기</button>`}<button class="btn" data-act="bclear">전체 해제</button><span class="sp"></span><button class="btn" data-act="close" data-force="1">취소</button><button class="btn pri" data-act="bsave">저장</button></div>
   </div></div>`;
 }
 function modalHtml(){
@@ -964,14 +982,14 @@ function modalHtml(){
     </div></div></div>`;
   if(m==='boss')return bossModal();
   if(m==='acc'){
-    const a=ui.acc;const has=new Set(S.chars.map(c=>c.name));
+    const a=ui.acc;const ex=n=>S.chars.find(c=>c.name===n);
     const worlds=[...new Set(account.map(x=>x.world))];
     const list=account.filter(x=>(a.world==='all'||x.world===a.world)&&(a.low||x.level>=200)&&(!a.q||x.name.includes(a.q)||(x.cls||'').includes(a.q)));
     const ns=Object.keys(a.sel).filter(k=>a.sel[k]).length;
     return `<div class="mb" data-act="close"><div class="md wide" data-stop="1">${head('계정 캐릭터')}<div class="bd">
       <div class="row"><button class="chip ${a.world==='all'?'on':''}" data-act="aw" data-v="all">전체</button>${worlds.map(w=>`<button class="chip ${a.world===w?'on':''}" data-act="aw" data-v="${esc(w)}">${esc(w)}</button>`).join('')}
         <span class="sp"></span><input class="in" id="aq" style="width:150px" placeholder="검색" value="${esc(a.q)}"><label class="row" style="gap:5px;color:var(--mu);font-size:12px"><input type="checkbox" data-act="alow" ${a.low?'checked':''}> 저레벨 표시</label></div>
-      ${account.length?`<div class="ag">${list.map(x=>{const img=S.imgs[x.name];return `<div class="ac ${a.sel[x.name]?'on':''} ${has.has(x.name)?'has':''}" data-act="asel" data-n="${esc(x.name)}"><span class="ck"></span><div class="im" style="${img?bodyStyle(img,96,80):`background:url('${SIL}') center/80px no-repeat`}"></div><b>${esc(x.name)}</b><span>Lv.${x.level} ${esc(x.cls)}</span><span style="color:var(--mu2)">${esc(x.world)}</span></div>`;}).join('')}</div>`:`<div class="row"><span class="spin" style="border-top-color:var(--ac)"></span></div>`}
+      ${account.length?`<div class="ag">${list.map(x=>{const img=S.imgs[x.name];return `<div class="ac ${a.sel[x.name]?'on':''} ${ex(x.name)?(ex(x.name).manual?'cv':'has'):''}" data-act="asel" data-n="${esc(x.name)}"><span class="ck"></span>${ex(x.name)&&ex(x.name).manual?'<span class="cvl">전환</span>':''}<div class="im" style="${img?bodyStyle(img,96,80):`background:url('${SIL}') center/80px no-repeat`}"></div><b>${esc(x.name)}</b><span>Lv.${x.level} ${esc(x.cls)}</span><span style="color:var(--mu2)">${esc(x.world)}</span></div>`;}).join('')}</div>`:`<div class="row"><span class="spin" style="border-top-color:var(--ac)"></span></div>`}
     </div><div class="ft"><span class="lbl">${ns}개 선택</span><span class="sp"></span><button class="btn" data-act="close">취소</button><button class="btn pri" data-act="aadd" ${ns?'':'disabled'}>선택 추가</button></div></div></div>`;
   }
   if(m==='man'){const r=ui.man.res;
@@ -983,21 +1001,28 @@ function modalHtml(){
   if(m==='bundle')return bundleModal();
   return '';
 }
-function undoToast(msg,snap){clearTimeout(tt);let e=document.querySelector('.toast');if(!e){e=document.createElement('div');document.body.appendChild(e);}
+function undoToast(msg,snap,after,ms=7000){clearTimeout(tt);let e=document.querySelector('.toast');if(!e){e=document.createElement('div');document.body.appendChild(e);}
   e.className='toast ok u';e.innerHTML=`<span>${esc(msg)}</span><button class="btn sm" id="undo">되돌리기</button>`;
-  e.querySelector('#undo').onclick=()=>{S=normalize(JSON.parse(snap));save();e.remove();render();};tt=setTimeout(()=>e.remove(),7000);}
+  e.querySelector('#undo').onclick=()=>{S=normalize(JSON.parse(snap));if(after)after();save();e.remove();render();};tt=setTimeout(()=>e.remove(),ms);}
+function stamp(){const k=kst();return k.toISOString().slice(0,10)+'-'+String(k.getUTCHours()).padStart(2,'0')+String(k.getUTCMinutes()).padStart(2,'0');}
+function dlJson(o,name){const u=URL.createObjectURL(new Blob([JSON.stringify(o,null,1)],{type:'application/json'}));const l=document.createElement('a');l.href=u;l.download=name;document.body.appendChild(l);l.click();l.remove();setTimeout(()=>URL.revokeObjectURL(u),2000);}
 let tt;function toast(m,ok){clearTimeout(tt);let e=document.querySelector('.toast');if(!e){e=document.createElement('div');document.body.appendChild(e);}e.className='toast'+(ok?' ok':'');e.textContent=m;tt=setTimeout(()=>e.remove(),5000);}
 
 async function openAcc(){
   ui.modal='acc';ui.acc={sel:{},world:'all',low:false,q:''};render();
   try{if(!account.length)await loadAccount();}catch(e){toast(e.message);}
   render();
-  const need=account.filter(x=>x.level>=200&&!S.imgs[x.name]);
-  let n=0;
-  await pool(need,async x=>{const b=await api('/character/basic',{ocid:x.ocid});S.imgs[x.name]=b.character_image;if(++n%4===0&&ui.modal==='acc')render();},4);
-  save();if(ui.modal==='acc')render();
 }
+let accIO=null,accBusy=0,accSave=0;const accQ=[];
+function observeAcc(){if(accIO){accIO.disconnect();accIO=null;}if(ui.modal!=='acc'||!key||!window.IntersectionObserver)return;
+  accIO=new IntersectionObserver(es=>{for(const e of es)if(e.isIntersecting){const n=e.target.dataset.n;accIO.unobserve(e.target);if(!S.imgs[n]&&!accQ.includes(n))accQ.push(n);}pumpAcc();},{rootMargin:'120px'});
+  document.querySelectorAll('.ac[data-n]').forEach(el=>{if(!S.imgs[el.dataset.n])accIO.observe(el);});}
+function pumpAcc(){while(accBusy<3&&accQ.length){const n=accQ.shift();const x=account.find(a=>a.name===n);if(!x||S.imgs[n])continue;accBusy++;
+  api('/character/basic',{ocid:x.ocid}).then(b=>{S.imgs[n]=b.character_image;const el=[...document.querySelectorAll('.ac[data-n]')].find(e=>e.dataset.n===n);const im=el&&el.querySelector('.im');if(im)im.setAttribute('style',bodyStyle(S.imgs[n]));})
+    .catch(()=>{}).finally(()=>{accBusy--;clearTimeout(accSave);accSave=setTimeout(save,800);pumpAcc();});}}
 
+const bossDirty=()=>ui.modal==='boss'&&ui.draft&&JSON.stringify(ui.draft)!==ui.draft0;
+const askClose=()=>!bossDirty()||confirm('저장하지 않고 닫을까?');
 function closeModal(){if(ui.modal==='bundle'){const b=bById(ui.be);if(b&&!b.items.length&&!b.members.length){S.bundles=S.bundles.filter(x=>x!==b);save();}ui.be=null;ui.split=null;}
   ui.modal=null;ui.draft=null;render();}
 /* ---------- events ---------- */
@@ -1008,7 +1033,7 @@ document.addEventListener('click',e=>{
   switch(a){
     case 'refresh':refresh();break;
     case 'set':ui.modal='set';render();break;
-    case 'close':closeModal();break;
+    case 'close':if(t.dataset.force||askClose())closeModal();break;
     case 'itog':{const b=bById(id),it=b&&b.items.find(x=>x.id===t.dataset.i);if(!it)break;setItem(it,!itemDone(it));if(it.c)ui.flash=it.c+'|'+it.b;save();render();break;}
     case 'ball':{const b=bById(id);if(!b)break;const all=b.items.every(itemDone);for(const it of b.items)if(itemDone(it)===all)setItem(it,!all);ui.flashB=id;save();render();break;}
     case 'bgo':{const el=document.getElementById('b-'+id);if(!el){const st=bState(bById(id));if(st.k==='done'){S.doneOpen=true;save();render();}}
@@ -1048,15 +1073,15 @@ document.addEventListener('click',e=>{
     case 'savekey':key=document.getElementById('k').value.trim();localStorage.setItem(LSK,key);ui.modal=null;account=[];if(!S.chars.length&&key)openAcc();else refresh();break;
     case 'savekey0':key=document.getElementById('k0').value.trim();if(!key)break;localStorage.setItem(LSK,key);openAcc();break;
     case 'tog':toggle(c,t.dataset.b);break;
-    case 'bset':{const ch=charById(c);ui.bc=c;const sel={};for(const s of slots(ch))sel[s.b]={d:s.d,n:s.n};const m=monthlySlot(ch);ui.draft={sel,monthly:m?{d:m.d,n:m.n}:null};ui.modal='boss';render();if(t.dataset.f==='name'||(ch.manual&&!ch.name))setTimeout(()=>{const i=document.getElementById('cfn');i&&i.focus();});break;}
+    case 'bset':{const ch=charById(c);ui.bc=c;const sel={};for(const s of slots(ch))sel[s.b]={d:s.d,n:s.n};const m=monthlySlot(ch);ui.draft={sel,monthly:m?{d:m.d,n:m.n}:null};ui.draft0=JSON.stringify(ui.draft);ui.modal='boss';render();if(t.dataset.f==='name'||(ch.manual&&!ch.name))setTimeout(()=>{const i=document.getElementById('cfn');i&&i.focus();});break;}
     case 'bd':{const b=t.dataset.b,d=t.dataset.d,dr=ui.draft;
       if(BMAP[b].monthly){dr.monthly=dr.monthly&&dr.monthly.d===d?null:{d,n:(dr.monthly&&dr.monthly.n)||1};}
       else{const cur=dr.sel[b];if(cur&&cur.d===d)delete dr.sel[b];else if(cur)cur.d=d;else if(Object.keys(dr.sel).length<12)dr.sel[b]={d,n:1};}
       render();break;}
     case 'bn':{const b=t.dataset.b,dr=ui.draft,cur=BMAP[b].monthly?dr.monthly:dr.sel[b];if(cur)cur.n=Math.max(1,Math.min(6,cur.n+ +t.dataset.d));render();break;}
     case 'bclear':ui.draft.sel={};ui.draft.monthly=null;render();break;
-    case 'bsave':{const ch=charById(ui.bc);ch.custom=true;ch.edited=Date.now();ch.sel=ui.draft.sel;ch.monthly=ui.draft.monthly;ch.fill=false;ui.modal=null;save();render();break;}
-    case 'breset':{const ch=charById(ui.bc);ch.custom=false;ch.sel={};ch.monthly=null;ch.fill=false;ui.modal=null;save();render();break;}
+    case 'bsave':{const ch=charById(ui.bc);ch.custom=true;ch.edited=Date.now();ch.sel=ui.draft.sel;ch.monthly=ui.draft.monthly;ch.fill=false;ui.modal=null;reconcile(S);save();render();break;}
+    case 'breset':{const ch=charById(ui.bc);ch.custom=false;ch.sel={};ch.monthly=null;ch.fill=false;ui.modal=null;reconcile(S);save();render();break;}
     case 'cmv':{const i=S.chars.findIndex(x=>x.id===ui.bc),j=i+ +t.dataset.d;if(j>=0&&j<S.chars.length){[S.chars[i],S.chars[j]]=[S.chars[j],S.chars[i]];save();render();}break;}
     case 'cdel':{const snap=JSON.stringify(S);const ch=charById(ui.bc);S.chars=S.chars.filter(x=>x.id!==ui.bc);S.bundles.forEach(b=>b.items=b.items.filter(x=>x.c!==ui.bc));ui.modal=null;save();render();undoToast(`${alias(ch)} 삭제됨`,snap);break;}
     case 'clook':{const ch=charById(ui.bc);if(!ch.name)break;lookupName(ch.name).then(r=>{S.cache[ch.id]=Object.assign(S.cache[ch.id]||{},r);ch.cls=r.cls;ch.level=r.level;save();render();}).catch(er=>toast(er.message));break;}
@@ -1064,20 +1089,27 @@ document.addEventListener('click',e=>{
     case 'aw':ui.acc.world=t.dataset.v;render();break;
     case 'alow':ui.acc.low=t.checked;render();break;
     case 'asel':{const n=t.dataset.n;ui.acc.sel[n]=!ui.acc.sel[n];render();break;}
-    case 'aadd':{for(const n of Object.keys(ui.acc.sel).filter(k=>ui.acc.sel[k])){const x=account.find(y=>y.name===n);if(!x||S.chars.find(y=>y.name===n))continue;const nc={id:uid('c'),alias:'',name:n,cls:x.cls,level:x.level,manual:false,custom:false,sel:{},monthly:null,fill:false};S.chars.push(nc);S.cache[nc.id]={ocid:x.ocid,img:S.imgs[n],world:x.world};}
+    case 'aadd':{for(const n of Object.keys(ui.acc.sel).filter(k=>ui.acc.sel[k])){const x=account.find(y=>y.name===n);if(!x)continue;const ex=S.chars.find(y=>y.name===n);
+      if(ex){if(!ex.manual)continue; // keyless card -> account character, same id: bundle rows, plan and checks stay
+        ex.manual=false;ex.conv=1;ex.cls=x.cls;ex.level=x.level;ex.img='';if(!Object.keys(ex.sel||{}).length&&!ex.monthly){ex.custom=false;ex.fill=false;}
+        S.cache[ex.id]=Object.assign(S.cache[ex.id]||{},{ocid:x.ocid,world:x.world},S.imgs[n]?{img:S.imgs[n]}:{});continue;}const nc={id:uid('c'),alias:'',name:n,cls:x.cls,level:x.level,manual:false,custom:false,sel:{},monthly:null,fill:false};S.chars.push(nc);S.cache[nc.id]={ocid:x.ocid,img:S.imgs[n],world:x.world};}
       ui.modal=null;save();refresh();break;}
     case 'man':ui.modal='man';ui.man={q:'',res:null,busy:false,img:''};render();setTimeout(()=>{const i=document.getElementById('mq');i&&i.focus();});break;
     case 'mlook':{const q=document.getElementById('mq').value.trim();if(!q)break;ui.man.q=q;ui.man.busy=true;render();lookupName(q).then(r=>{ui.man.res=r;}).catch(er=>{ui.man.res=null;toast(er.message);}).finally(()=>{ui.man.busy=false;render();});break;}
-    case 'madd':{const q=(document.getElementById('mq').value||'').trim();const r=ui.man.res&&ui.man.res.name===q?ui.man.res:null;const img=document.getElementById('mimg')?document.getElementById('mimg').value.trim():'';
-      const nc={id:uid('c'),alias:'',name:q,cls:r?r.cls:'',level:r?r.level:'',img:img,manual:true,custom:true,sel:{},monthly:null,fill:false};
-      S.chars.push(nc);if(r)S.cache[nc.id]={ocid:r.ocid,img:r.img,level:r.level,cls:r.cls,world:r.world,t:r.t||Date.now()};ui.modal=null;save();render();
-      if(!r&&q)lookupName(q).then(rr=>{S.cache[nc.id]=Object.assign(S.cache[nc.id]||{},rr);nc.cls=rr.cls;nc.level=rr.level;save();render();}).catch(()=>{});
+    case 'madd':{const mq=document.getElementById('mq');const q=(mq&&mq.value||'').trim();if(!q){mq&&mq.focus();break;}if(ui.man.busy)break;
+      const img=document.getElementById('mimg')?document.getElementById('mimg').value.trim():'';
+      const add=r=>{const nc={id:uid('c'),alias:'',name:(r&&r.name)||q,cls:r?r.cls:'',level:r?r.level:'',img,manual:true,custom:true,sel:{},monthly:null,fill:false};
+        S.chars.push(nc);if(r)S.cache[nc.id]={ocid:r.ocid,img:r.img,level:r.level,cls:r.cls,world:r.world,t:r.t||Date.now()};ui.modal=null;save();render();};
+      if(ui.man.res&&ui.man.res.name===q){add(ui.man.res);break;}
+      ui.man.q=q;ui.man.img=img;ui.man.busy=true;render();
+      lookupName(q).then(r=>{ui.man.busy=false;add(r);}).catch(er=>{ui.man.busy=false;ui.man.res=null;if(/찾을 수 없음/.test(er.message)){render();toast(er.message);}else{add(null);toast(er.message);}});
       break;}
     case 'compact':S.compact=t.checked;save();render();break;
-    case 'exp':{const o={...S};if(document.getElementById('xk').checked)o.apiKey=key;const bl=new Blob([JSON.stringify(o,null,1)],{type:'application/json'});const u=URL.createObjectURL(bl);const l=document.createElement('a');l.href=u;l.download='boss-scheduler-'+weekKey()+'.json';l.click();URL.revokeObjectURL(u);break;}
+    case 'exp':{const o={...S};if(document.getElementById('xk').checked)o.apiKey=key;dlJson(o,'boss-scheduler-'+stamp()+'.json');break;}
     case 'imp':document.getElementById('file').click();break;
-    case 'reset':if(ui.busy||!confirm('이 파일에 저장된 캐릭터·파티·API 키를 모두 지울까?'))break;
-      [LS,LS1,LSK].forEach(k=>localStorage.removeItem(k));key='';account=[];pq.length=0;
+    case 'reset':{const has=S.chars.length||S.bundles.length;if(ui.busy||!confirm(has?'캐릭터·파티·API 키를 모두 지울까? 지우기 전에 백업 파일을 내려받아.':'이 파일에 저장된 데이터를 모두 지울까?'))break;
+      if(has)dlJson(S,'boss-scheduler-backup-'+stamp()+'.json');}
+      [LS,LS1,LSK,LS+'.bak'].forEach(k=>localStorage.removeItem(k));key='';account=[];pq.length=0;
       S=normalize(null);Object.assign(ui,{modal:null,draft:null,be:null,split:null,pick:false,pf:[],wo:0,err:'',bc:null});render();break;
   }
 });
@@ -1086,21 +1118,27 @@ document.addEventListener('change',e=>{
   if(t.dataset.sf&&ui.modal==='bundle'){const b=bById(ui.be);const iid=t.dataset.i;const it=iid&&b.items.find(x=>x.id===iid);const sc=it?it.o:b.sched;
     if(sc){if(t.dataset.sf==='time')sc.time=normTime(t.value);else if(/^\d{4}-\d\d-\d\d$/.test(t.value))sc.date=t.value;save();render();}return;}
   if(t.dataset.bf&&ui.modal==='bundle'){const b=bById(ui.be);const f=t.dataset.bf;if(f==='cross'){b.cross=t.checked;b.xo=true;}else b[f]=t.value.trim();save();render();return;}
-  if(t.dataset.if&&ui.modal==='bundle'){const b=bById(ui.be);const it=b.items.find(x=>x.id===t.dataset.i);if(it){it.d=t.value;save();render();}return;}
+  if(t.dataset.if&&ui.modal==='bundle'){const b=bById(ui.be);const it=b.items.find(x=>x.id===t.dataset.i);if(it){const c=charById(it.c);
+    if(c&&(planKnown(c)||slotOf(c,it.b))&&setCharDiff(c,it.b,t.value))it.d='';else it.d=t.value;save();render();}return;}
   if(t.dataset.cf){const c=charById(ui.bc);c[t.dataset.cf]=t.value.trim();save();render();
     if(t.dataset.cf==='name'&&c.name&&key)lookupName(c.name).then(r=>{S.cache[c.id]=Object.assign(S.cache[c.id]||{},r);c.cls=r.cls;c.level=r.level;save();render();}).catch(er=>toast(er.message));}
   if(t.dataset.tf){ui.tf[t.dataset.tf]=t.value;render();return;}
-  if(t.id==='file'&&t.files[0]){t.files[0].text().then(s=>{let o=JSON.parse(s);if(o.apiKey){key=o.apiKey;localStorage.setItem(LSK,key);delete o.apiKey;}if(!o||typeof o!=='object'||!(Array.isArray(o.chars)))throw new Error('형식이 다름');S=normalize(migrate(o));save();ui.modal=null;render();toast('가져오기 완료',1);refresh();}).catch(er=>toast('가져오기 실패: '+er.message));t.value='';}
+  if(t.id==='file'&&t.files[0]){t.files[0].text().then(s=>{let o=JSON.parse(s);if(!o||typeof o!=='object'||!(Array.isArray(o.chars)))throw new Error('형식이 다름');
+      if((S.chars.length||S.bundles.length)&&!confirm('지금 데이터를 이 파일 내용으로 바꿀까?'))return;
+      const snap=JSON.stringify(S),k0=key;try{localStorage.setItem(LS+'.bak',snap);}catch(_){}
+      if(o.apiKey){key=o.apiKey;localStorage.setItem(LSK,key);delete o.apiKey;}
+      S=normalize(migrate(o));save();ui.modal=null;render();
+      undoToast('가져오기 완료',snap,()=>{if(key!==k0){key=k0;account=[];if(k0)localStorage.setItem(LSK,k0);else localStorage.removeItem(LSK);}},12000);refresh();}).catch(er=>toast('가져오기 실패: '+er.message));t.value='';}
 });
 document.addEventListener('input',e=>{if(e.target.id==='aq'){ui.acc.q=e.target.value;const pos=e.target.selectionStart;render();const i=document.getElementById('aq');i.focus();i.setSelectionRange(pos,pos);}});
 document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'&&ui.modal)closeModal();
+  if(e.key==='Escape'&&ui.modal&&askClose())closeModal();
   if(e.key==='Enter'){if(e.target.id==='k')document.querySelector('[data-act=savekey]').click();if(e.target.id==='k0')document.querySelector('[data-act=savekey0]').click();if(e.target.id==='mq')document.querySelector('[data-act=mlook]').click();if(e.target.id==='bmn'){e.preventDefault();document.querySelector('[data-act=bmadd]').click();}if(e.target.dataset&&(e.target.dataset.sf==='time'||e.target.dataset.bf==='name'||e.target.dataset.bf==='memo'))e.target.blur();}
 });
 setInterval(()=>{if(!ui.modal&&(!document.activeElement||document.activeElement===document.body))render();},60000);
 save();render();
 if(key&&S.chars.length)refresh();else if(S.chars.length)wrefresh(false);
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&key&&S.chars.length&&!ui.busy&&(!S.fetchedAt||Date.now()-Date.parse(S.fetchedAt)>15*6e4))refresh();});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&key&&S.chars.length&&!ui.busy&&(!S.fetchedAt||Date.now()-Date.parse(S.fetchedAt)>15*6e4))refresh(true);});
 </script>
 </body>
 </html>
