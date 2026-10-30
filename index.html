@@ -891,7 +891,10 @@ function applyQ(b,it,r){if(!r)return false;const cur=qTarget(b,it);const set=ns=
   set({t:'date',date:r.date,time:r.time});return true;}
 const qeInput=(bid,iid,ph)=>`<span class="qe"><input class="in" id="qe-${bid}-${iid}" data-qe="1" data-id="${bid}" data-i="${iid}" placeholder="${ph||'빠른 입력'}" autocomplete="off" spellcheck="false" aria-label="빠른 입력"><span class="qp" aria-live="polite"></span></span>`;
 function qePreview(el){const b=bById(el.dataset.id);if(!b)return;const it=el.dataset.i?b.items.find(x=>x.id===el.dataset.i):null;const r=parseQ(el.value);const p=el.parentNode.querySelector('.qp');if(!p)return;
-  const t=el.value.trim()?qText(b,it,r):'';p.textContent=el.value.trim()&&!t?'?':t;p.className='qp'+(el.value.trim()&&(!t||(r&&r.past))?' bad':'');}
+  const t=el.value.trim()?qText(b,it,r):'';p.textContent=el.value.trim()&&!t?'?':t;p.className='qp'+(el.value.trim()&&(!t||(r&&r.past))?' bad':'');
+  const sg=el.closest('.sed')&&el.closest('.sed').querySelector('.seg[data-cur]');if(!sg)return;
+  const cur=qTarget(b,it),m=el.value.trim()&&t&&r?(r.t==='fix'?'fix':r.t==='date'?(!it&&cur&&cur.t==='wk'?'wk':'date'):r.t==='none'?(it?'':'none'):sg.dataset.cur):sg.dataset.cur;
+  sg.querySelectorAll('button').forEach(x=>{const on=x.dataset.v===m;x.classList.toggle('on',on);x.setAttribute('aria-pressed',on);});}
 
 /* keyless: fill image/level/job/world of named characters via the Worker (stale after 6h, or all on 새로고침) */
 let wBusy=false;
@@ -1081,7 +1084,7 @@ function bundleCard(b,st,next,off=0){
     return `<div class="bro ${done?'done':''}">${icon(it.b,24,d,'s')}<span class="bb">${esc(it.b)}<i>${DIFF_KO[d]}</i>${capTag(it.b,sz)}</span><span class="bc ${c?'':'nm'}">${c?esc(nick(c)):'캐릭터 미정'}${pcText(it)?`<small class="pcx" title="${esc(pcText(it))}">${esc(pcText(it))}</small>`:''}</span>${it.o?`<span class="ot ${ol?'late':''}">${esc(schedTxt(it.o,1))}</span>`:''}${off?'<span></span>':`<button class="pk ${done?'on':''}" data-act="itog" data-id="${b.id}" data-i="${it.id}" aria-pressed="${done}" aria-label="${esc(it.b+(done?' 클리어 취소':' 클리어 체크'))}"></button>`}</div>`;}).join('');
   return `<div class="bk ${allDone?'done':''} ${off?'nx':''} ${next?'next':''} ${ui.flashB===b.id?'flash':''}" id="b-${b.id}" style="--acc:${b.color}">
     <div class="bh"><button class="bt" data-act="bed" data-id="${b.id}" title="${esc(bTip(b))}">${bTitle(b)}</button>${off?'':showMi(b)?miInput(b):''}${isX(b)?'<span class="xw">월드 통합</span>':''}<span class="sz">${sz}인</span>
-      <button class="bs ${b.sched.t} ${sLate?'late':''} ${sToday?'td':''} ${st.late?'late':''}" data-act="bed" data-id="${b.id}" data-f="sch">${b.sched.t==='fix'?'<i>매주</i>':b.sched.t==='wk'?'<i>조율</i>':''}${esc(b.sched.t==='none'?'미정':schedTxt(b.sched,1))}</button></div>
+      ${b.sched.t==='none'&&b.items.some(it=>it.o)?'':`<button class="bs ${b.sched.t} ${sLate?'late':''} ${sToday?'td':''} ${st.late?'late':''}" data-act="bed" data-id="${b.id}" data-f="sch">${b.sched.t==='fix'?'<i>매주</i>':b.sched.t==='wk'?'<i>조율</i>':''}${esc(b.sched.t==='none'?'미정':schedTxt(b.sched,1))}</button>`}</div>
     ${sLate?`<div class="bexp"><span>지난 일정</span><button class="lk" data-act="tonone" data-id="${b.id}">미정으로</button></div>`:''}${b.memo?`<div class="bmemo">${esc(b.memo)}</div>`:''}
     <div class="brs ${S.compact?'cp':''}">${rows||`<button class="btn sm ghost" data-act="bed" data-id="${b.id}" data-f="add">${I.plus}보스</button>`}</div>
     ${its.length&&off?`<div class="bf"><span class="bsum">${its.length}보스<em>${won(sum)}</em></span></div>`:''}${its.length&&!off?`<div class="bf"><span class="bsum">${st.n}/${st.t}<em>${won(sum)}</em></span><span class="sp"></span><button class="btn sm ${allDone?'ghost':''}" data-act="ball" data-id="${b.id}">${allDone?'완료 취소':'모두 완료'}</button></div>`:''}
@@ -1207,7 +1210,7 @@ function schedEd(s,iid){
       <div class="row"><input class="in" type="date" style="width:150px" value="${esc(s.date||'')}" data-sf="date" data-i="${iid}" aria-label="날짜">${s.date&&!inGrid?`<span class="lbl">${esc(schedTxt(s,1))}</span>`:''}</div>`;
     if(t==='wk')body=`<div class="row"><input class="in" style="width:150px" value="${esc(s.hint||'')}" data-sf="hint" data-i="" maxlength="12" aria-label="대략적인 시간"><span class="lbl">${wkLive(s)?esc(schedTxt({t:'date',date:s.date,time:s.time},1)):'이번 주 시간 미정'}</span></div>`+body;}
   const tm=t==='fix'||t==='date'||t==='wk'?`<input class="in tm" inputmode="numeric" placeholder="--:--" value="${esc(s.time||'')}" data-sf="time" data-i="${iid}" aria-label="시간">`:'';
-  return `<div class="sed"><div class="row">${qeInput(ui.be,iid)}</div><div class="row"><div class="seg" role="group">${opts.map(([v,l])=>`<button class="${t===v?'on':''}" data-act="st" data-i="${iid}" data-v="${v}" aria-pressed="${t===v}">${l}</button>`).join('')}</div>${tm}</div>${body}</div>`;
+  return `<div class="sed">${t==='none'?'':`<div class="row">${qeInput(ui.be,iid)}</div>`}<div class="row"><div class="seg" role="group" data-cur="${t}">${opts.map(([v,l])=>`<button class="${t===v?'on':''}" data-act="st" data-i="${iid}" data-v="${v}" aria-pressed="${t===v}">${l}</button>`).join('')}</div>${tm}</div>${body}</div>`;
 }
 // which character a member brings for this boss (only people with alts; default none)
 function pcPick(b,it){return b.pids.map(id=>pById(id)).filter(p=>p&&p.alts.length).map(p=>{const v=(it.pc||{})[p.id]||'';
