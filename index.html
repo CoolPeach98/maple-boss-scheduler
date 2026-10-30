@@ -264,9 +264,9 @@ select.in{padding:0 4px}
 .bs{margin-left:auto;flex:none;border:0;background:none;padding:2px 0 2px 6px;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--tx);white-space:nowrap;display:inline-flex;align-items:baseline;gap:4px}
 .bs i{font-style:normal;font-size:11px;font-weight:600;color:var(--mu2)}
 .bs.none{color:var(--mu2);font-weight:500;font-size:12px}
-.bs.td{background:var(--td);color:var(--on);border-radius:3px;padding:2px 6px}.bs.td i{color:var(--on-b)}:root[data-theme=dark] .bs.td i{color:var(--on)}
+.bs.td{color:var(--tx)}
 .bs.late{color:var(--bad)}.bs.date.late{text-decoration:line-through;text-decoration-color:#c0353b88}
-.bs:hover{text-decoration:underline;text-underline-offset:3px}
+.bpen{flex:none;margin-left:auto;width:24px;height:24px;margin-right:-4px;border:0;border-radius:4px;background:none;color:var(--mu2);display:inline-grid;place-items:center;padding:0}.bs~.bpen{margin-left:2px}.bpen:hover{color:var(--tx);background:var(--panel)}.bpen:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
 .bmemo{padding:0 11px 4px;font-size:12px;color:var(--mu2)}
 .brs{display:flex;flex-direction:column;padding:0 10px 0 11px}
 .bro{display:grid;grid-template-columns:26px minmax(0,1fr) minmax(0,auto) auto 22px;gap:8px;align-items:center;min-height:34px;border-top:1px solid var(--line3)}
@@ -304,7 +304,7 @@ select.in{padding:0 4px}
 .panel.nw .wrg{color:var(--tx);font-weight:700}
 .sh .rg{font-size:12px;color:var(--mu2)}
 .bk.nx{background:var(--w);box-shadow:inset 0 0 0 1px var(--line)}
-[data-card]{cursor:pointer}.bk[data-card]:hover,.bk.nx[data-card]:hover{background:var(--panel3)}.cr[data-card]:hover{background:var(--panel2)}
+[data-card]{cursor:pointer}.bk[data-card]{box-shadow:0 0 0 1px transparent;transition:box-shadow .12s,background .12s}.bk[data-card]:hover,.bk.nx[data-card]:hover{background:var(--panel3);box-shadow:0 0 0 1px var(--hv)}.cr[data-card]:hover{background:var(--panel2)}
 .mchip small{font-size:11px;font-weight:500;color:var(--mu2);margin-left:5px}
 /* bundle editor */
 .bm .bd{gap:0;padding:4px 16px 10px}
@@ -332,7 +332,7 @@ select.in{padding:0 4px}
 .ers{display:flex;flex-direction:column;min-width:0}
 .ero{border-bottom:1px solid var(--line);padding:5px 0}
 .ero .row{gap:8px;flex-wrap:nowrap}
-.ero .bb{font-size:13px;font-weight:600;width:62px;white-space:nowrap;flex:none}
+.ero .bb{font-size:13px;font-weight:600;min-width:62px;white-space:nowrap;flex:none}
 .ero .bc{max-width:150px}
 .ero.sp{background:var(--s1)}
 .ero .sed{padding:6px 0 4px 34px}
@@ -441,6 +441,9 @@ select.in{padding:0 4px}
 }
 ::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:var(--sb);border-radius:5px;border:2px solid var(--bg)}
 /* v20: backup tucked into a collapsed section at the bottom of 설정 */
+.gdr{margin-top:6px;border-top:1px solid var(--line);padding-top:8px}.gdb{border:0;background:none;padding:0;cursor:pointer;color:var(--mu2);font-size:12px;font-weight:600}.gdb:hover{color:var(--tx)}.gdb::after{content:'▸';margin-left:5px;font-size:10px}
+.attr .ver{float:right;font-variant-numeric:tabular-nums}
+.gd h3{font-size:14px;margin:14px 0 6px}.gd h3:first-child{margin-top:0}.gd h4{font-size:13px;font-weight:700;margin:10px 0 3px;color:var(--tx)}.gd ul{margin:0;padding-left:18px}.gd li{margin:3px 0;line-height:1.55;font-size:13px;color:var(--tx)}.gd li b{font-weight:600}.gd .nt{margin-top:14px;font-size:12px;color:var(--mu);line-height:1.5}
 .bkx{margin-top:6px;border-top:1px solid var(--line);padding-top:8px}
 .bkx summary{cursor:pointer;color:var(--mu2);font-size:12px;font-weight:600;list-style:none;user-select:none}
 .bkx summary::-webkit-details-marker{display:none}
@@ -472,7 +475,8 @@ select.in{padding:0 4px}
 .pr{border-bottom:1px solid var(--line);padding:8px 0;display:flex;flex-direction:column;gap:6px}
 .prh{display:flex;align-items:center;gap:8px}.prh .pnk{font-size:13px}.prh small,.mchip small{color:var(--mu2);font-size:11px;margin-left:4px}
 .pcn{color:var(--mu2);font-size:12px}
-.pms{height:26px;font-size:12px;width:auto;color:var(--mu)}
+.pms{height:26px;font-size:12px;width:120px;flex:none;color:var(--mu)}
+.md.gdm{width:640px}.gdm .bd{max-height:min(72vh,720px);overflow:auto}
 .pal{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .mchip.alt{background:var(--panel2);font-weight:500}
 .mchip .mk{width:auto;padding:0 5px;font-size:11px;color:var(--mu2)}.mchip .mk:hover{color:var(--tx)}
@@ -492,6 +496,8 @@ const ICONS = {"가엔슬": "data:image/webp;base64,UklGRrILAABXRUJQVlA4IKYLAABw
 const ICI=Object.fromEntries(Object.keys(ICONS).map((k,i)=>[k,i]));
 {const st=document.createElement('style');st.textContent=Object.entries(ICONS).map(([k,v])=>`.ic.i${ICI[k]}{background-image:url(${v})}`).join('\n');document.head.appendChild(st);}
 const API='https://open.api.nexon.com/maplestory/v1';
+const APP_VER="v30";
+const GUIDE_HTML="<h3>1. 캐릭터</h3><h4>캐릭터 등록</h4><ul><li>오른쪽 위 \"닉네임으로 추가\"에 닉네임을 입력하면 직업, 레벨, 월드, 이미지를 불러옵니다.</li><li>넥슨 API 키를 등록하면 계정의 캐릭터 목록에서 바로 고를 수 있습니다.</li></ul><h4>캐릭터 카드</h4><ul><li>카드의 &lt; &gt; 버튼으로 캐릭터 순서를 바꿉니다.</li><li>카드에는 이번 주 수익, 클리어 수(최대 12), 월간 수익이 표시됩니다.</li><li>기간제 칭호를 착용 중이면 \"칭호 이름 · N일 남음\"이 표시되고, 마우스를 올리면 정확한 만료 시각이 나옵니다. API 키 없이 추가한 캐릭터도 표시됩니다.</li></ul><h4>보스 설정</h4><ul><li>캐릭터 카드를 누르면 보스와 난이도를 고르는 창이 열립니다.</li><li>주간 보스는 캐릭터당 최대 12개까지 선택할 수 있습니다.</li><li>검은마법사(월간)는 별도로 설정합니다.</li><li>API 키가 있으면 인게임 보스 스케줄러에 등록한 보스를 그대로 불러옵니다.</li></ul><h3>2. 파티</h3><h4>파티 만들기</h4><ul><li>\"+ 파티\"를 누르고 파티원, 보스, 일정을 입력합니다.</li><li>파티 제목은 파티원 닉네임으로 자동 표시됩니다.</li><li>파티 카드 아무 곳이나 누르거나 오른쪽 위 연필 버튼을 누르면 파티 설정이 열립니다.</li></ul><h4>파티원</h4><ul><li>파티원 칸에 닉네임을 입력하고 \"추가\"를 누릅니다.</li><li><b>구인 필요</b>: 아직 구하지 못한 인원 수를 + - 로 설정합니다.</li><li><b>월드 통합</b>: 다른 월드 캐릭터가 파티에 있으면 자동으로 체크되고 고정됩니다.</li></ul><h4>파티원 관리 (부캐 설정)</h4><ul><li>파티원은 \"사람\" 단위로 관리됩니다. 대표 닉네임 하나에 부캐를 묶을 수 있습니다.</li><li>파티 영역 위쪽의 \"파티원\" 버튼으로 열고, 사람별로 부캐 닉네임을 추가합니다.</li><li><b>\"대표로\"</b>: 해당 부캐를 대표 닉네임으로 바꿉니다. 파티 제목도 함께 바뀝니다.</li><li><b>\"합치기\"</b>: 같은 사람이 두 번 등록됐을 때 하나로 합칩니다.</li><li>부캐가 있는 파티원은 보스마다 어떤 캐릭터로 오는지 고를 수 있습니다.</li><li>부캐 닉네임을 파티원 칸에 입력해도 같은 사람으로 인식됩니다.</li></ul><h4>일정</h4><ul><li>빠른 입력 칸에 \"토9시\", \"매주 금 21시\", \"11/6 20시\"처럼 입력하면 자동으로 인식됩니다.</li><li>이미 지난 요일을 입력하면 다음 주로 들어갑니다.</li><li><b>매주</b>: 매주 같은 요일·시간</li><li><b>매주 조율</b>: 매주 가지만 시간은 그때그때 정함</li><li><b>날짜</b>: 이번 한 번만</li><li><b>미정</b>: 아직 정하지 않음</li><li><b>따로</b>: 같은 파티 안에서 보스마다 일정을 다르게 정할 수 있습니다.</li></ul><h4>파티 설정 기타</h4><ul><li><b>파티 이름</b>: 파티원 닉네임 대신 원하는 이름으로 표시합니다.</li><li><b>파티 색</b>: 카드와 달력 색을 정합니다.</li><li><b>메모</b>: 카드에 함께 표시됩니다.</li><li><b>⋯ 메뉴</b>: 파티 나누기, 복제 등을 할 수 있습니다.</li><li>삭제나 변경 직후 뜨는 알림에서 \"되돌리기\"를 누를 수 있습니다.</li></ul><h3>3. 보기와 공유</h3><ul><li><b>이번 주 / 다음 주</b>: 주간 일정을 넘겨 봅니다.</li><li><b>카드 / 표</b>: 파티 카드 보기와 캐릭터×보스 표 보기를 전환합니다.</li><li>파티원 이름 버튼을 누르면 그 사람과 가는 파티만 걸러 봅니다.</li><li>파티 탭 위에 다음 보스 일정까지 남은 시간이 표시됩니다.</li><li><b>일정 복사</b>: 이번 주 남은 일정을 카톡에 붙여넣기 좋은 형태로 복사합니다.</li></ul><h3>4. 클리어 체크와 수익</h3><ul><li>캐릭터 카드의 보스 아이콘이나 파티 카드의 체크박스로 클리어를 표시합니다.</li><li>\"모두 완료\"로 파티 보스를 한 번에 체크할 수 있습니다.</li><li>API 키가 있으면 인게임 클리어 기록이 자동으로 체크됩니다. 실제로 잡은 난이도가 다르면 그 난이도로 바뀝니다.</li><li>맨 위에 이번 주 수익(번 금액 / 전체)과 월간 수익이 따로 표시됩니다.</li><li>한 월드의 주간 결정석이 90개를 넘으면 경고가 표시됩니다.</li><li>수익을 누르면 지난주 기록을 볼 수 있습니다.</li><li>매주 목요일 0시에 자동으로 초기화됩니다.</li></ul><h3>5. 설정</h3><ul><li><b>넥슨 API 키</b>: 입력하면 캐릭터 목록과 클리어 기록을 자동으로 불러옵니다. 키는 사용하는 브라우저에만 저장됩니다. (발급: openapi.nexon.com)</li><li><b>화면</b>: 라이트 / 다크 / 시스템 중에서 선택합니다.</li><li><b>백업</b>: 내보내기 / 가져오기로 데이터를 파일로 저장하거나 불러옵니다.</li><li><b>사용 안내</b>: 이 안내와 현재 버전을 볼 수 있습니다.</li></ul><p class=\"nt\">※ 모든 데이터는 브라우저에 저장됩니다. 인터넷 사용 기록을 삭제하면 데이터가 사라질 수 있으니 주기적으로 백업해 주세요.</p>";
 const LS='bsd.v4', LS1='bsd.v1', LSK='bsd.key';
 const DIFF_KO={Z:'이지',N:'노말',H:'하드',C:'카오스',E:'익스트림'};
 const DIFF_LT={Z:'EZ',N:'N',H:'H',C:'C',E:'EX'};
@@ -924,9 +930,9 @@ let wBusy=false;
 async function manualWorlds(){for(const c of S.chars){if(!c.manual||!c.name)continue;const cc=S.cache[c.id]=S.cache[c.id]||{};if(cc.world||Date.now()-(cc.wt||0)<864e5)continue;
   cc.wt=Date.now();try{const r=await wlook(c.name);if(r.world)cc.world=r.world;if(!cc.img&&r.img)cc.img=r.img;save();render();}catch(e){save();if(/네트워크|서버|한도/.test(e.message))break;}}}
 async function wrefresh(all){if(wBusy)return;wBusy=true;
-  const now=Date.now(),todo=S.chars.filter(c=>c.name&&(all||!(S.cache[c.id]||{}).img||now-((S.cache[c.id]||{}).t||0)>216e5));
+  const now=Date.now(),todo=S.chars.filter(c=>{const cc=S.cache[c.id]||{};return c.name&&(all||!cc.img||now-(cc.t||0)>216e5||(!key&&now-(+cc.tt||0)>216e5));});
   if(all){ui.busy=true;render();}
-  for(const c of todo){try{const r=await wlook(c.name);const cc=S.cache[c.id]=Object.assign(S.cache[c.id]||{},{img:r.img,level:r.level,cls:r.cls,world:r.world,t:r.t});cc.gone=0;if(c.manual){c.cls=r.cls;c.level=r.level;}save();render();}
+  for(const c of todo){try{const r=await wlook(c.name,!key);const cc=S.cache[c.id]=Object.assign(S.cache[c.id]||{},{img:r.img,level:r.level,cls:r.cls,world:r.world,t:r.t});if(r.title)cc.title=r.title;if(!key)cc.tt=Date.now();cc.gone=0;if(c.manual){c.cls=r.cls;c.level=r.level;}save();render();}
     catch(e){if(/찾을 수 없음/.test(e.message)){(S.cache[c.id]=S.cache[c.id]||{}).gone=1;save();render();}if(/네트워크|서버|한도/.test(e.message)){if(all)toast(e.message);break;}}
     await new Promise(z=>setTimeout(z,200));}
   if(all)ui.busy=false;wBusy=false;render();lookupPeople(allLookupNames());}
@@ -975,15 +981,16 @@ async function refresh(light){
     if(!c.name||stop)return;
     const cc=S.cache[c.id]=S.cache[c.id]||{};
     let ocid=(account.find(a=>a.name===c.name)||{}).ocid||cc.ocid;
+    // 기간제 칭호 (any character, manual ones too): one call, on a full refresh or when the cached one is older than 6h
+    const ttl=async()=>{if(light&&isObj(cc.title)&&Date.now()-(+cc.title.t||0)<=216e5)return;try{const q=await api('/character/item-equipment',{ocid});cc.title=mkTitle(q&&q.title);}catch(e){if(fatal(e.message))throw e;}};
+    if(light&&c.manual&&ocid){try{await ttl();}catch(e){if(fatal(e.message))stop=e.message;}return;}
     if(light&&(!ocid||c.manual))return;
     try{
       if(!ocid)ocid=(await api('/id',{character_name:c.name})).ocid;
-      cc.ocid=ocid;
+      cc.ocid=ocid;await ttl();
       if(!light||(!cc.img&&Date.now()-(cc.bt||0)>216e5)){cc.bt=Date.now();const b=await api('/character/basic',{ocid});if(b.character_name&&b.character_name!==c.name&&!c.manual){c.name=b.character_name;}Object.assign(cc,{img:b.character_image,level:b.character_level,cls:b.character_class,world:b.world_name});
       S.imgs[c.name]=b.character_image;imgStamp(c.name);}
       if(!c.manual){
-        // 기간제 칭호: one call, on a full refresh or when the cached one is older than 6h
-        if(!light||!isObj(cc.title)||Date.now()-(+cc.title.t||0)>216e5){try{const q=await api('/character/item-equipment',{ocid});const t=q&&q.title;cc.title={n:t&&t.title_name||'',exp:t&&t.date_expire||null,t:Date.now()};}catch(e){if(fatal(e.message))throw e;}}
         const live=await api('/scheduler/character-state',{ocid});
         // Until a character logs in after the Thursday reset, today's data has no weekly entries.
         // Walk back day by day (max 14) to the latest snapshot that has weekly registrations.
@@ -1016,13 +1023,13 @@ const hasWeekly=j=>(j.boss_contents||[]).some(e=>e.cycle==='bossWeekly'&&String(
 const kstDate=back=>kst(Date.now()-back*D).toISOString().slice(0,10);
 const WORKER='https://maple-char.ycoolpeach98coolpeach98coolpeach98.workers.dev';
 // keyless lookup (public ranking page via the maple-char Worker): {name,world,level,job,image}
-async function wlook(name){let r;
-  try{r=await fetch(WORKER+'/char?name='+encodeURIComponent(name));}catch(e){throw new Error('네트워크 오류');}
+async function wlook(name,tt){let r;
+  try{r=await fetch(WORKER+'/char?name='+encodeURIComponent(name)+(tt?'&t=1':''));}catch(e){throw new Error('네트워크 오류');}
   if(r.status===404||r.status===400)throw new Error('캐릭터를 찾을 수 없음');
   if(r.status===429)throw new Error('요청 한도 초과');
   if(!r.ok)throw new Error('조회 서버 오류');
   const j=await r.json();if(j.image){S.imgs[j.name||name]=j.image;imgStamp(j.name||name);}
-  return {img:j.image||'',level:j.level||'',cls:j.job||'',world:j.world||'',name:j.name||name,t:Date.now()};}
+  return {img:j.image||'',level:j.level||'',cls:j.job||'',world:j.world||'',name:j.name||name,t:Date.now(),title:'title' in j?mkTitle(j.title):undefined};}
 async function lookupName(name){
   if(!key){const r=await wlook(name);save();return r;}
   let ocid,b;
@@ -1037,7 +1044,7 @@ const price=(b,d)=>(PRICE[b]||{})[d]||0;
 function shareSize(c,b,n){const [bb]=itemOf(c.id,b);return bb?bSize(bb):Math.max(1,n||1);}
 const bMax=b=>(BMAP[b]&&BMAP[b].max)||6;
 const share=(b,d,size)=>Math.floor(price(b,d)/Math.max(1,Math.min(size||1,bMax(b))));
-const capTag=(b,sz)=>sz>bMax(b)?`<i class="cap3" title="${bMax(b)}인 보스 · ${bMax(b)}인 기준 분배">${bMax(b)}인</i>`:'';
+const capTag=(b,sz)=>sz>bMax(b)?`<i class="cap3" title="${bMax(b)}인 보스 · ${bMax(b)}인 기준 분배">최대 ${bMax(b)}인</i>`:'';
 
 // weekly crystals: up to 90 per world per week (sale cap, 9/17 patch); keep the most valuable
 function capInfo(){if(capMemo)return capMemo;const by=new Map();
@@ -1055,7 +1062,7 @@ function revTotal(){const t={wk:0,wkC:0,mo:0,moC:0};for(const c of S.chars){cons
 function won(n){n=Math.floor(n||0);if(!n)return '0';const e=Math.floor(n/1e8),m=Math.floor(n%1e8/1e4);return e?(e+'억'+(m?' '+m+'만':'')):(m?m+'만':n.toLocaleString('ko-KR'));}
 /* ---------- render helpers ---------- */
 const SV=(d,w=14)=>`<svg class="i" viewBox="0 0 24 24" style="width:${w}px;height:${w}px" aria-hidden="true">${d}</svg>`;
-const I={chev:SV('<path d="M9 6l6 6-6 6"/>',13),x:SV('<path d="M6 6l12 12M18 6L6 18"/>'),l:SV('<path d="M15 6l-6 6 6 6"/>'),r:SV('<path d="M9 6l6 6-6 6"/>'),
+const I={pen:SV('<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13 7l4 4"/>',14),chev:SV('<path d="M9 6l6 6-6 6"/>',13),x:SV('<path d="M6 6l12 12M18 6L6 18"/>'),l:SV('<path d="M15 6l-6 6 6 6"/>'),r:SV('<path d="M9 6l6 6-6 6"/>'),
   ref:SV('<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 5v6h-6"/>',13),plus:SV('<path d="M12 5v14M5 12h14"/>',13)};
 const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const SIL="data:image/svg+xml,"+encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300'><g fill='#c9c9c2'><circle cx='146' cy='146' r='22'/><path d='M118 200c0-20 12-30 28-30s28 10 28 30z'/></g></svg>").replace(/'/g,'%27');
@@ -1067,7 +1074,8 @@ function faceStyle(url,size,z,cy,cx=146){const av=isAv(url),n=av?180:300;if(av){
 function bodyStyle(url){const av=isAv(url);return `background-image:url('${esc(url)}');background-size:${av?'133px 133px':'222px 222px'};background-position:${av?'calc(50% - 3px) calc(50% - 8px)':'50% calc(50% - 7px)'}`;}
 function face(c,size){return `<span class="face" title="${esc(alias(c))}" style="${faceStyle(charImg(c),size,size/34,146)}"></span>`;}
 const alias=c=>nick(c);
-function titleOf(c,now=Date.now()){if(!key||c.manual)return null;const t=(S.cache[c.id]||{}).title;if(!isObj(t)||!t.n||!t.exp)return null;const ms=Date.parse(t.exp);if(!(ms>now))return null;const left=ms-now;
+const mkTitle=t=>({n:t&&t.title_name||'',exp:t&&t.date_expire||null,t:Date.now()});
+function titleOf(c,now=Date.now()){const t=(S.cache[c.id]||{}).title;if(!isObj(t)||!t.n||!t.exp)return null;const ms=Date.parse(t.exp);if(!(ms>now))return null;const left=ms-now;
   const k=kst(ms);return {n:t.n,left:left<D?Math.max(1,Math.floor(left/H))+'시간 남음':Math.floor(left/D)+'일 남음',until:`${k.getUTCMonth()+1}/${k.getUTCDate()} ${String(k.getUTCHours()).padStart(2,'0')}:${String(k.getUTCMinutes()).padStart(2,'0')}까지`};}
 const job=c=>{const cc=S.cache[c.id]||{};const cl=cc.cls||c.cls||'',lv=cc.level||c.level||'';return [cl,lv?'Lv.'+lv:''].filter(Boolean).join(' · ');};
 const ic=(b,sz)=>`<span class="ic i${ICI[b]}"${sz?` style="width:${sz}px;height:${sz}px"`:''}></span>`;
@@ -1117,7 +1125,7 @@ function bundleCard(b,st,next,off=0){
     return `<div class="bro ${done?'done':''}">${icon(it.b,24,d,'s')}<span class="bb">${esc(it.b)}<i>${DIFF_KO[d]}</i>${capTag(it.b,sz)}</span><span class="bc ${c?'':'nm'}">${c?esc(nick(c)):'캐릭터 미정'}${pcText(it)?`<small class="pcx" title="${esc(pcText(it))}">${esc(pcText(it))}</small>`:''}</span>${it.o?`<span class="ot ${ol?'late':''}">${esc(schedTxt(it.o,1,ws))}</span>`:''}${off?'<span></span>':`<button class="pk ${done?'on':''}" data-act="itog" data-id="${b.id}" data-i="${it.id}" aria-pressed="${done}" aria-label="${esc(it.b+(done?' 클리어 취소':' 클리어 체크'))}"></button>`}</div>`;}).join('');
   return `<div class="bk ${allDone?'done':''} ${off?'nx':''} ${next?'next':''} ${ui.flashB===b.id?'flash':''}" id="b-${b.id}" data-card="${b.id}" style="--acc:${b.color}">
     <div class="bh"><button class="bt" data-act="bed" data-id="${b.id}" title="${esc(bTip(b))}">${bTitle(b)}</button>${off?'':showMi(b)?miInput(b):''}${isX(b)?'<span class="xw">월드 통합</span>':''}<span class="sz">${sz}인</span>
-      ${b.sched.t==='none'&&b.items.some(it=>oLive(it.o))?'':`<button class="bs ${b.sched.t} ${sLate?'late':''} ${sToday?'td':''} ${st.late?'late':''}" data-act="bed" data-id="${b.id}" data-f="sch">${b.sched.t==='fix'?'<i>매주</i>':b.sched.t==='wk'?'<i>조율</i>':''}${esc(b.sched.t==='none'?'미정':schedTxt(b.sched,1,ws))}</button>`}</div>
+      ${b.sched.t==='none'&&b.items.some(it=>oLive(it.o))?'':`<button class="bs ${b.sched.t} ${sLate?'late':''} ${sToday?'td':''} ${st.late?'late':''}" data-act="bed" data-id="${b.id}" data-f="sch">${b.sched.t==='fix'?'<i>매주</i>':b.sched.t==='wk'?'<i>조율</i>':''}${esc(b.sched.t==='none'?'미정':schedTxt(b.sched,1,ws))}</button>`}<button class="bpen" data-act="bed" data-id="${b.id}" aria-label="파티 설정">${I.pen}</button></div>
     ${sLate?`<div class="bexp"><span>지난 일정</span><button class="lk" data-act="tonone" data-id="${b.id}">미정으로</button></div>`:''}${b.memo?`<div class="bmemo">${esc(b.memo)}</div>`:''}
     <div class="brs ${S.compact?'cp':''}">${rows||`<button class="btn sm ghost" data-act="bed" data-id="${b.id}" data-f="add">${I.plus}보스</button>`}</div>
     ${its.length&&off?`<div class="bf"><span class="bsum">${its.length}보스<em>${won(sum)}</em>${mt}</span></div>`:''}${its.length&&!off?`<div class="bf"><span class="bsum">${st.n}/${st.t}<em>${won(sum)}</em>${mt}</span><span class="sp"></span><button class="btn sm ${allDone?'ghost':''}" data-act="ball" data-id="${b.id}">${allDone?'완료 취소':'모두 완료'}</button></div>`:''}
@@ -1165,10 +1173,10 @@ function partySection(){
   const vseg=S.bundles.length||S.chars.length?`<div class="seg sm vw" role="group" aria-label="보기"><button class="${tb?'':'on'}" data-act="tbl" data-v="0" aria-pressed="${!tb}">카드</button><button class="${tb?'on':''}" data-act="tbl" data-v="1" aria-pressed="${tb}">표</button></div>`:'';
   const wzb=nm?`<button class="wzb" data-act="wz">파티원 입력<em>${nm}</em></button>`:'';
   if(tb)return `<div class="panel" style="margin-top:12px">
-    <div class="ph"><h2>파티</h2><span class="wrg">${md(weekStartKst())} 목 – ${md(weekStartKst()+6*D)} 수</span>${nxeHtml()}${wzb}<span class="sp"></span>${S.bundles.some(b=>b.items.length)?`<button class="btn sm ghost" data-act="share">일정 복사</button>`:''}${vseg}<button class="btn sm" data-act="padd">${I.plus}파티</button></div>
+    <div class="ph"><h2>파티</h2><span class="wrg">${md(weekStartKst())} 목 – ${md(weekStartKst()+6*D)} 수</span>${nxeHtml()}${wzb}<span class="sp"></span>${S.bundles.some(b=>b.items.length)?`<button class="btn sm ghost" data-act="share">일정 복사</button>`:''}${S.people.length||S.bundles.length?'<button class="btn sm ghost" data-act="pplm">파티원</button>':''}${vseg}<button class="btn sm" data-act="padd">${I.plus}파티</button></div>
     ${tableView()}</div>`;
   return `<div class="panel ${wo?'nw':''}" style="margin-top:12px">
-    <div class="ph"><h2>파티</h2><div class="seg sm" role="group"><button class="${wo?'':'on'}" data-act="wo" data-v="0" aria-pressed="${!wo}">이번 주</button><button class="${wo?'on':''}" data-act="wo" data-v="1" aria-pressed="${!!wo}">다음 주</button></div><span class="wrg">${rg}</span>${nxeHtml()}${wzb}<span class="sp"></span>${!wo&&S.bundles.some(b=>b.items.length)?`<button class="btn sm ghost" data-act="share">일정 복사</button>`:''}${vseg}<button class="btn sm" data-act="padd">${I.plus}파티</button></div>
+    <div class="ph"><h2>파티</h2><div class="seg sm" role="group"><button class="${wo?'':'on'}" data-act="wo" data-v="0" aria-pressed="${!wo}">이번 주</button><button class="${wo?'on':''}" data-act="wo" data-v="1" aria-pressed="${!!wo}">다음 주</button></div><span class="wrg">${rg}</span>${nxeHtml()}${wzb}<span class="sp"></span>${!wo&&S.bundles.some(b=>b.items.length)?`<button class="btn sm ghost" data-act="share">일정 복사</button>`:''}${S.people.length||S.bundles.length?'<button class="btn sm ghost" data-act="pplm">파티원</button>':''}${vseg}<button class="btn sm" data-act="padd">${I.plus}파티</button></div>
     ${pf}
     ${S.bundles.length?`<div class="strip">${strip(wo)}</div>`:''}
     ${S.bundles.length?'':'<div class="pe">파티 없음</div>'}${sec(wo?'다음 주':'이번 주',wk)}${coSec}${sec(wo?'그 이후':'다음 주 이후',lt)}
@@ -1225,7 +1233,7 @@ function wizModal(){const w=ui.wz;const b=w&&bById(w.ids[w.i]);if(!b){ui.modal=n
       <div class="wzi">${its.map(it=>{const c=charById(it.c),d=itemDiff(it);return `<span class="wzr">${icon(it.b,22,d,'s')}<b>${esc(it.b)}</b><i>${DIFF_KO[d]}</i><span>${c?esc(nick(c)):'캐릭터 미정'}</span></span>`;}).join('')}</div>
       <div class="mems">${b.members.map((n,i)=>`<span class="mchip">${esc(n)}<button data-act="bmdel" data-v="${i}" aria-label="${esc(n)} 빼기">${I.x}</button></span>`).join('')}
         ${b.members.length<5?`<input class="in" id="bmn" list="bppl" style="width:150px" placeholder="닉네임" maxlength="12" autocomplete="off" aria-label="파티원 닉네임"><datalist id="bppl">${pplOpts(b.members)}</datalist><button class="btn sm" data-act="bmadd">추가</button>`:''}
-        <span class="opn"><span class="lbl">빈자리</span><div class="stp" style="margin-left:0"><button data-act="bopen" data-d="-1" aria-label="빈자리 감소">−</button><span>${b.open||0}</span><button data-act="bopen" data-d="1" aria-label="빈자리 증가">+</button></div></span>
+        <span class="opn"><span class="lbl">구인 필요</span><div class="stp" style="margin-left:0"><button data-act="bopen" data-d="-1" aria-label="구인 필요 감소">−</button><span>${b.open||0}</span><button data-act="bopen" data-d="1" aria-label="구인 필요 증가">+</button></div></span>
         ${xBox(b)}</div>
       ${sug.length&&b.members.length<5?`<div class="sug">${sug.map(n=>`<button class="chip" data-act="wzs" data-v="${esc(n)}">${esc(n)}</button>`).join('')}</div>`:''}
     </div>
@@ -1266,7 +1274,7 @@ function pplModal(){const ps=S.people.slice().sort((a,b)=>pplUse(b.id)-pplUse(a.
         <input class="in pai" id="pa-${p.id}" data-pa="${p.id}" placeholder="부캐 닉네임" maxlength="12" autocomplete="off" aria-label="${esc(p.nick)} 부캐 닉네임"></div></div>`;}).join(''):'<span class="lbl">파티원 없음</span>'}
   </div></div></div>`;}
 function addAlt(p,n){n=String(n||'').trim();if(!n||pChars(p).includes(n))return false;if(isMine(n)){toast(n+': 내 캐릭터');return false;}const o=findPerson(n);
-  if(o){toast(n===o.nick?`${n}: 이미 있는 파티원 · 합치기로 묶어`:`${n}: ${o.nick}의 캐릭터`);return false;}p.alts.push(n);return true;}
+  if(o){toast(n===o.nick?`${n}: 이미 있는 파티원입니다`:`${n}: ${o.nick}의 캐릭터`);return false;}p.alts.push(n);return true;}
 function setRep(p,a){if(!p.alts.includes(a))return;const old=p.nick;p.alts=[old,...p.alts.filter(x=>x!==a)];p.nick=a;refreshMembers();
   ui.pf=ui.pf.map(x=>x===old?a:x);savePf();}
 function mergePeople(keep,gone){if(!keep||!gone||keep===gone)return;
@@ -1304,7 +1312,7 @@ function bundleModal(){
     <div class="bd">
       <div class="erow"><span class="lbl">파티원</span><div class="mems">${b.members.map((n,i)=>`<span class="mchip">${esc(n)}${pWorld(n)?`<small>${esc(pWorld(n))}</small>`:''}<button data-act="bmdel" data-v="${i}" aria-label="${esc(n)} 빼기">${I.x}</button></span>`).join('')}
         ${b.members.length<5?`<input class="in" id="bmn" list="bppl" style="width:130px" placeholder="닉네임" maxlength="12" aria-label="파티원 닉네임"><datalist id="bppl">${pplOpts(b.members)}</datalist><button class="btn sm" data-act="bmadd">추가</button>`:''}
-        <span class="opn"><span class="lbl">빈자리</span><div class="stp" style="margin-left:0"><button data-act="bopen" data-d="-1" aria-label="빈자리 감소">−</button><span>${b.open||0}</span><button data-act="bopen" data-d="1" aria-label="빈자리 증가">+</button></div></span>
+        <span class="opn"><span class="lbl">구인 필요</span><div class="stp" style="margin-left:0"><button data-act="bopen" data-d="-1" aria-label="구인 필요 감소">−</button><span>${b.open||0}</span><button data-act="bopen" data-d="1" aria-label="구인 필요 증가">+</button></div></span>
         ${xBox(b)}<button class="btn sm ghost" data-act="pplm">파티원 관리</button></div></div>
       <div class="erow"><span class="lbl">일정</span>${schedEd(b.sched,'')}</div>
       <div class="erow"><span class="lbl">보스</span><div class="ers">${rows||''}${!its.length||ui.pick?`<div class="pick">${pick}</div>`:''}${its.length?`<div class="row" style="padding-top:8px"><button class="btn sm ${ui.pick?'on':''}" data-act="bpick" aria-expanded="${!!ui.pick}">${ui.pick?'닫기':I.plus+'보스'}</button></div>`:''}</div></div>
@@ -1402,11 +1410,12 @@ function modalHtml(){
       <div class="row"><input class="in" id="k" type="password" style="flex:1" value="${esc(key)}" placeholder="live_..." autocomplete="off"><button class="btn pri" data-act="savekey">저장</button></div>
       <div class="row"><a href="https://openapi.nexon.com" target="_blank" style="color:var(--mu);font-size:12px">openapi.nexon.com</a></div>
       <div class="row"><span class="lbl">화면</span><div class="seg sm" role="group" aria-label="화면">${[['light','라이트'],['dark','다크'],['system','시스템']].map(([v,t])=>`<button class="${theme()===v?'on':''}" data-act="theme" data-v="${v}" aria-pressed="${theme()===v}">${t}</button>`).join('')}</div></div>
-      ${S.people.length?`<div class="row"><button class="btn" data-act="pplm">파티원 관리</button></div>`:''}
+      <div class="gdr"><button class="gdb" data-act="guide">사용 안내</button></div>
       <details class="bkx" id="bkx" ${ui.bkOpen?'open':''}><summary>백업</summary>
       <div class="row"><button class="btn" data-act="exp">내보내기</button><label class="row" style="gap:5px;color:var(--mu);font-size:12px"><input type="checkbox" id="xk"> 키 포함</label><button class="btn" data-act="imp">가져오기</button><span class="sp"></span><button class="btn dng" data-act="reset" ${ui.busy?'disabled':''}>데이터 초기화</button></div></details>
-      <div class="attr">Data based on NEXON Open API · API 키는 이 브라우저에만 저장</div><div class="attr legal">넥슨과 무관한 비공식 도구 · 게임 데이터 권리는 넥슨코리아에 있음</div>
+      <div class="attr">Data based on NEXON Open API · API 키는 이 브라우저에만 저장<span class="ver">${APP_VER}</span></div><div class="attr legal">넥슨과 무관한 비공식 도구 · 게임 데이터 권리는 넥슨코리아에 있음</div>
     </div></div></div>`;
+  if(m==='guide')return `<div class="mb" data-act="close"><div role="dialog" aria-modal="true" aria-label="사용 안내" class="md gdm" data-stop="1">${head('사용 안내 '+APP_VER)}<div class="bd gd">${GUIDE_HTML}</div></div></div>`;
   if(m==='boss')return bossModal();
   if(m==='ppl')return pplModal();
   if(m==='share'){const t=shareText(ui.shareB&&bById(ui.shareB));return `<div class="mb" data-act="close"><div role="dialog" aria-modal="true" class="md shm" data-stop="1">${head('일정 복사')}<div class="bd"><textarea class="in shx" id="shx" readonly rows="${Math.min(16,t.split('\n').length+1)}">${esc(t)}</textarea></div><div class="ft"><span class="sp"></span><button class="btn pri" data-act="copy">복사</button></div></div></div>`;}
@@ -1470,7 +1479,7 @@ function pumpAcc(){while(ui.modal==='acc'&&accBusy<3&&accQ.length){const n=accQ.
     .catch(()=>{}).finally(()=>{accBusy--;clearTimeout(accSave);accSave=setTimeout(save,800);pumpAcc();});}}
 
 const bossDirty=()=>ui.modal==='boss'&&ui.draft&&JSON.stringify(ui.draft)!==ui.draft0;
-const askClose=()=>!bossDirty()||confirm('저장하지 않고 닫을까?');
+const askClose=()=>!bossDirty()||confirm('저장하지 않고 닫을까요?');
 function flashCard(id){ui.flashC={id,at:Date.now()};const el=document.querySelector(`.card[data-c="${id}"]`);if(!el)return;el.scrollIntoView({block:'center',behavior:'smooth'});el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash');}
 // nickname already on the board -> show that card instead of adding a copy
 function dupCard(n){const c=S.chars.find(x=>x.name===n);if(!c)return false;ui.modal=null;render();flashCard(c.id);return true;}
@@ -1521,7 +1530,7 @@ document.addEventListener('click',e=>{
     case 'pplm':{ui.pplBack=ui.modal;ui.modal='ppl';ui.dupes=null;render();break;}
     case 'prep':{const p=pById(id);if(p){const snap=JSON.stringify(S),o=p.nick;setRep(p,t.dataset.v);save();render();undoToast(`대표: ${o} → ${p.nick}`,snap);}break;}
     case 'padel':{const p=pById(id);if(p){const snap=JSON.stringify(S);p.alts=p.alts.filter(x=>x!==t.dataset.v);delete p.ws[t.dataset.v];save();render();undoToast(`${t.dataset.v} 뺌`,snap);}break;}
-    case 'pdel':{const p=pById(id);if(!p)break;const n=pplUse(p.id);if(n&&!confirm(`${p.nick}: ${n}개 파티에서 빠짐. 삭제할까?`))break;const snap=JSON.stringify(S);
+    case 'pdel':{const p=pById(id);if(!p)break;const n=pplUse(p.id);if(n&&!confirm(`${p.nick}: ${n}개 파티에서 빠집니다. 삭제할까요?`))break;const snap=JSON.stringify(S);
       for(const b of S.bundles)if(b.pids.includes(p.id)){b.pids=b.pids.filter(x=>x!==p.id);b.members=b.members.filter(x=>x!==p.nick);for(const it of b.items)if(it.pc)delete it.pc[p.id];}
       S.people=S.people.filter(x=>x!==p);ui.pf=ui.pf.filter(x=>x!==p.nick);savePf();save();render();undoToast(`${p.nick} 삭제됨`,snap);break;}
     case 'bmerge':{const snap=JSON.stringify(S);mergeBundles(t.dataset.v.split(','));save();render();undoToast('한 파티로 합침',snap);break;}
@@ -1529,6 +1538,7 @@ document.addEventListener('click',e=>{
     case 'bshare':ui.more=false;ui.shareB=ui.be;ui.shBack=1;ui.modal='share';render();break;
     case 'copy':{const x=document.getElementById('shx');if(x){x.select();copyText(x.value);}break;}
     case 'hist':ui.modal='hist';render();break;
+    case 'guide':ui.modal='guide';render();break;
     case 'cgone':{const ch=charById(c);if(!ch)break;const snap=JSON.stringify(S);S.chars=S.chars.filter(x=>x!==ch);S.bundles.forEach(b=>b.items=b.items.filter(x=>x.c!==ch.id));save();render();undoToast(`${nick(ch)} 삭제됨`,snap);break;}
     case 'theme':localStorage.setItem(LSTH,t.dataset.v);applyTheme();render();break;
     case 'gob':{if(S.tbl){ui.hlB=id;clearTimeout(ui.hlT);ui.hlT=setTimeout(()=>{ui.hlB=null;render();},2500);render();const el=document.querySelector('.tc.hl');el&&el.scrollIntoView({block:'center',behavior:'smooth'});break;}
@@ -1566,7 +1576,7 @@ document.addEventListener('click',e=>{
       if(ob===b)b.items=b.items.filter(x=>x!==oit);
       else{if(ob){ob.items=ob.items.filter(x=>x!==oit);toast(`${t.dataset.b} · ${bTip(ob)}에서 옮김`,1);}b.items.push({id:uid('i'),b:t.dataset.b,c,d:'',o:null,dk:null});}
       save();render();break;}
-    case 'bdel':{const b=bById(ui.be);if(!b)break;if(b.items.length&&!confirm('이 파티를 삭제할까?'))break;const snap=JSON.stringify(S);S.bundles=S.bundles.filter(x=>x!==b);ui.modal=null;ui.be=null;save();render();if(b.items.length)undoToast('파티 삭제됨',snap);break;}
+    case 'bdel':{const b=bById(ui.be);if(!b)break;if(b.items.length&&!confirm('이 파티를 삭제할까요?'))break;const snap=JSON.stringify(S);S.bundles=S.bundles.filter(x=>x!==b);ui.modal=null;ui.be=null;save();render();if(b.items.length)undoToast('파티 삭제됨',snap);break;}
 
     case 'savekey':key=document.getElementById('k').value.trim();localStorage.setItem(LSK,key);ui.modal=null;account=[];if(!S.chars.length&&key)openAcc();else refresh();break;
     case 'savekey0':key=document.getElementById('k0').value.trim();if(!key)break;localStorage.setItem(LSK,key);openAcc();break;
@@ -1610,7 +1620,7 @@ document.addEventListener('click',e=>{
     case 'compact':S.compact=t.checked;save();render();break;
     case 'exp':{const o={...S};if(document.getElementById('xk').checked)o.apiKey=key;dlJson(o,'boss-scheduler-'+stamp()+'.json');break;}
     case 'imp':document.getElementById('file').click();break;
-    case 'reset':{const has=S.chars.length||S.bundles.length;if(ui.busy||!confirm(has?'캐릭터·파티·API 키를 모두 지울까? 지우기 전에 백업 파일을 내려받아.':'이 파일에 저장된 데이터를 모두 지울까?'))break;
+    case 'reset':{const has=S.chars.length||S.bundles.length;if(ui.busy||!confirm(has?'캐릭터·파티·API 키를 모두 지울까요? 지우기 전에 백업 파일을 내려받아 두세요.':'이 파일에 저장된 데이터를 모두 지울까요?'))break;
       if(has)dlJson(S,'boss-scheduler-backup-'+stamp()+'.json');}
       [LS,LS1,LSK,LS+'.bak',LSPF].forEach(k=>localStorage.removeItem(k));key='';account=[];pq.length=0;
       S=normalize(null);Object.assign(ui,{modal:null,wz:null,draft:null,be:null,split:null,pick:false,pf:[],wo:0,err:'',bc:null});render();break;
@@ -1621,7 +1631,7 @@ document.addEventListener('change',e=>{
   if(t.dataset.pc&&ui.modal==='bundle'){const b=bById(ui.be),it=b&&b.items.find(x=>x.id===t.dataset.i);if(!it)return;it.pc=it.pc||{};if(t.value)it.pc[t.dataset.pc]=t.value;else delete it.pc[t.dataset.pc];save();lookupPeople(bPeopleChars(b).map(x=>x[1]));render();return;}
   if(t.dataset.sel&&ui.sel){const i=t.dataset.sel;ui.sel=t.checked?[...new Set([...ui.sel,i])]:ui.sel.filter(x=>x!==i);render();return;}
   if(t.dataset.spo){if(t.dataset.spo==='m')ui.spm=t.checked;else ui.sps=t.checked;return;}
-  if(t.dataset.pm&&ui.modal==='ppl'){const keep=pById(t.dataset.pm),gone=pById(t.value);if(keep&&gone&&confirm(`${gone.nick} → ${keep.nick} 한 사람으로 합칠까?`)){const snap=JSON.stringify(S),g=gone.nick;mergePeople(keep,gone);save();render();undoToast(`${g} → ${keep.nick} 합침`,snap);return;}render();return;}
+  if(t.dataset.pm&&ui.modal==='ppl'){const keep=pById(t.dataset.pm),gone=pById(t.value);if(keep&&gone&&confirm(`${gone.nick} → ${keep.nick} 한 사람으로 합칠까요?`)){const snap=JSON.stringify(S),g=gone.nick;mergePeople(keep,gone);save();render();undoToast(`${g} → ${keep.nick} 합침`,snap);return;}render();return;}
   if(t.dataset.sf&&ui.modal==='bundle'){const b=bById(ui.be);const iid=t.dataset.i;const it=iid&&b.items.find(x=>x.id===iid);const sc=it?it.o:b.sched;
     if(sc){if(t.dataset.sf==='time')sc.time=normTime(t.value);else if(t.dataset.sf==='hint'){if(sc.t==='wk')sc.hint=t.value.trim().slice(0,12);}else if(/^\d{4}-\d\d-\d\d$/.test(t.value))sc.date=t.value;save();render();}return;}
   if(t.dataset.bf&&(ui.modal==='bundle'||ui.modal==='wiz')){const b=bById(ui.be);const f=t.dataset.bf;if(f==='cross'){if(lockInfo(b)){render();return;}b.cross=t.checked;}else b[f]=t.value.trim();save();render();return;}
@@ -1629,7 +1639,7 @@ document.addEventListener('change',e=>{
     if(c&&(planKnown(c)||slotOf(c,it.b))&&setCharDiff(c,it.b,t.value))it.d='';else it.d=t.value;save();render();}return;}
   if(t.dataset.cf){const c=charById(ui.bc);const old=c[t.dataset.cf];c[t.dataset.cf]=t.value.trim();
     // a renamed character's looked-up world/image belonged to the old name
-    if(t.dataset.cf==='name'&&old!==c.name){const cc=S.cache[c.id];if(cc){delete cc.world;delete cc.img;cc.wt=0;cc.t=0;cc.gone=0;}if(!key&&c.manual&&c.name)setTimeout(manualWorlds);}
+    if(t.dataset.cf==='name'&&old!==c.name){const cc=S.cache[c.id];if(cc){delete cc.world;delete cc.img;delete cc.title;delete cc.ocid;cc.wt=0;cc.t=0;cc.gone=0;}if(!key&&c.manual&&c.name)setTimeout(manualWorlds);}
     save();render();
     if(t.dataset.cf==='name'&&c.name&&key)lookupName(c.name).then(r=>{S.cache[c.id]=Object.assign(S.cache[c.id]||{},r);c.cls=r.cls;c.level=r.level;save();render();}).catch(er=>toast(er.message));}
   if(t.dataset.tf){ui.tf[t.dataset.tf]=t.value;render();return;}
@@ -1640,7 +1650,7 @@ document.addEventListener('change',e=>{
       const dn=dropN;
       // try the file before swapping: totals + a full render, nothing saved; any failure leaves the current data as it was
       {const old=S;let bad=false;noSave=1;S=nS;try{weekSum();revTotal();render();}catch(_){bad=true;}finally{S=old;noSave=0;capMemo=null;}render();if(bad)throw new Error('파일 내용을 읽을 수 없음');}
-      if((S.chars.length||S.bundles.length)&&!confirm('지금 데이터를 이 파일 내용으로 바꿀까?'))return;
+      if((S.chars.length||S.bundles.length)&&!confirm('지금 데이터를 이 파일 내용으로 바꿀까요?'))return;
       const snap=JSON.stringify(S),k0=key;try{localStorage.setItem(LS+'.bak',snap);}catch(_){}
       if(ak){key=ak;localStorage.setItem(LSK,key);}
       S=nS;save();ui.modal=null;render();
