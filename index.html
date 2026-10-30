@@ -118,7 +118,7 @@ select.in{padding:0 4px}
 .md .bd{padding:14px;display:flex;flex-direction:column;gap:10px}
 .md .ft{display:flex;gap:8px;align-items:center;padding:10px 14px;border-top:1px solid var(--line)}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.bl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 20px}
+.bl{display:grid;grid-template-columns:minmax(0,1fr);gap:0}
 .br{display:flex;align-items:center;gap:10px;padding:6px 4px;border-bottom:1px solid var(--line)}
 .br:not(.on) .bi{opacity:.45;filter:grayscale(.6)}
 .br{min-width:0}.br .bn{font-weight:600;font-size:13px;width:56px;white-space:nowrap;flex:none}
@@ -423,6 +423,15 @@ select.in{padding:0 4px}
 .bt:has(> .who.nm){flex:none}.bt > .who.nm{overflow:visible}
 .crt b.nm,.lg b.nm{color:var(--mu2);font-weight:500}
 .mh .nm{color:var(--mu2);font-weight:500}
+/* v21: reorder on the card (hover), single-column compact boss list */
+.cmo{position:absolute;left:4px;top:4px;display:flex;gap:2px;opacity:0;transition:opacity .12s;z-index:2}
+.card:hover .cmo,.cmo:focus-within{opacity:1}
+.cmo button{width:20px;height:20px;padding:0;border:1px solid var(--line2);border-radius:4px;background:#fffe;color:var(--mu);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.cmo button:hover{color:var(--tx);border-color:#a9a9a2}
+.cmo svg{width:12px;height:12px}
+.md.cbm{width:640px}
+.cbm .br{padding:2px 4px;gap:8px}.cbm .dc button{height:22px}.cbm .stp button{height:22px}
+.cbm .bl+.bl{margin-top:6px}
 </style>
 </head>
 <body>
@@ -471,7 +480,10 @@ const ORDER=Object.fromEntries(ALL.map((b,i)=>[b.id,i]));
 const API2ID=Object.fromEntries(ALL.map(b=>[b.api,b.id]));
 const DAYS=['목','금','토','일','월','화','수'];
 const COLORS=['#ff6b6b','#ffa94d','#ffd43b','#69db7c','#38d9a9','#4dabf7','#748ffc','#da77f2','#f783ac','#adb5bd'];
-const WORLDS=['스카니아','베라','루나','제니스','크로아','유니온','엘리시움','이노시스','레드','오로라','아케인','노바','에오스','핼리오스','챌린저스','챌린저스2','챌린저스3','챌린저스4'];
+// v21: current worlds only (리부트/리부트2 became 에오스/핼리오스 on 2024-12-19; 챌린저스 is seasonal; 스페셜 are event worlds)
+const WORLDS=['스카니아','베라','루나','제니스','크로아','유니온','엘리시움','이노시스','레드','오로라','아케인','노바','에오스','핼리오스'];
+const isSpecialW=w=>/^스페셜/.test(w||'');
+const pickW=w=>WORLDS.includes(w);
 
 /* ---------- time (KST) ---------- */
 const H=3600e3,D=24*H;
@@ -792,7 +804,7 @@ function applyQ(b,it,r){if(!r)return false;const cur=qTarget(b,it);const set=ns=
   if(r.past)return false;
   if(!it&&cur&&cur.t==='wk'){cur.date=r.date;cur.time=r.time;return true;}
   set({t:'date',date:r.date,time:r.time});return true;}
-const qeInput=(bid,iid,ph)=>`<span class="qe"><input class="in" id="qe-${bid}-${iid}" data-qe="1" data-id="${bid}" data-i="${iid}" placeholder="${ph||'토9시'}" autocomplete="off" spellcheck="false" aria-label="시간 입력"><span class="qp" aria-live="polite"></span></span>`;
+const qeInput=(bid,iid,ph)=>`<span class="qe"><input class="in" id="qe-${bid}-${iid}" data-qe="1" data-id="${bid}" data-i="${iid}" placeholder="${ph||''}" autocomplete="off" spellcheck="false" aria-label="시간 입력"><span class="qp" aria-live="polite"></span></span>`;
 function qePreview(el){const b=bById(el.dataset.id);if(!b)return;const it=el.dataset.i?b.items.find(x=>x.id===el.dataset.i):null;const r=parseQ(el.value);const p=el.parentNode.querySelector('.qp');if(!p)return;
   const t=el.value.trim()?qText(b,it,r):'';p.textContent=el.value.trim()&&!t?'?':t;p.className='qp'+(el.value.trim()&&(!t||(r&&r.past))?' bad':'');}
 
@@ -836,7 +848,7 @@ function parseSched(j){
 }
 async function loadAccount(){
   const L=await api('/character/list');account=[];
-  for(const a of (L.account_list||[]))for(const c of (a.character_list||[]))account.push({name:c.character_name,ocid:c.ocid,cls:c.character_class,level:c.character_level,world:c.world_name});
+  for(const a of (L.account_list||[]))for(const c of (a.character_list||[]))if(!isSpecialW(c.world_name))account.push({name:c.character_name,ocid:c.ocid,cls:c.character_class,level:c.character_level,world:c.world_name});
   account.sort((a,b)=>b.level-a.level);
 }
 async function refresh(light){
@@ -1008,7 +1020,7 @@ function partySection(){
   const crow=(x,miss)=>{const b=x.b,its=(miss||b.items).slice().sort(itemSort),free=!miss||miss.every(it=>!it.o);
     return `<div class="cr ${pfOn()?(pfMatch(b)?'':'fdim'):''}" id="${miss?'m':'b'}-${b.id}" style="--acc:${b.color}"><button class="crt" data-act="bed" data-id="${b.id}" data-f="sch" title="${esc(bTip(b))}"><span class="dot"></span>${bText(b)?`<b>${esc(bText(b))}</b>`:`<b class="nm">파티원 미입력</b>`}</button>
       <span class="crh">${miss?'시간 없음':esc(b.sched.hint||'매주')}</span><span class="cri">${its.map(it=>`<span class="bti" title="${esc(DIFF_KO[itemDiff(it)]+' '+it.b+(charById(it.c)?' · '+nick(charById(it.c)):''))}">${ic(it.b)}<span class="bg ${itemDiff(it)}">${DIFF_LT[itemDiff(it)]}</span></span>`).join('')}</span>
-      ${free?qeInput(b.id,'',b.sched.hint?'토9시':''):''}</div>`;};
+      ${free?qeInput(b.id,''):''}</div>`;};
   const coN2=coW.length+coN.length+part.length;
   const coSec=coN2?`<div class="sec co"><div class="sh"><h3>조율 필요</h3><span>${coN2}</span></div>
     ${coW.length||part.length?`<div class="crs">${coW.map(x=>crow(x)).join('')}${part.map(x=>crow(x,x.st.miss)).join('')}</div>`:''}${grid(coN)}</div>`:'';
@@ -1027,7 +1039,6 @@ function partySection(){
     ${S.bundles.length?`<div class="strip">${strip(wo)}</div>`:''}
     ${sec(wo?'다음 주':'이번 주',wk)}${coSec}${sec(wo?'그 이후':'다음 주 이후',lt)}
     ${!wo&&dn.length?`<div class="sec dn"><div class="sh"><button class="tgl" data-act="dfold" aria-expanded="${dOpen}">${I.chev}완료 <b>${dn.length}</b></button></div>${dOpen?grid(dn):''}</div>`:''}
-    ${S.bundles.length?'':`<div class="ob"><button class="btn" data-act="padd">${I.plus}파티</button></div>`}
   </div>`;
 }
 const needMem=()=>S.bundles.filter(b=>b.items.length&&!b.members.length);
@@ -1071,7 +1082,7 @@ function schedEd(s,iid){
     const inGrid=s.date&&dateMs(s.date)>=ws&&dateMs(s.date)<ws+14*D;
     body=`<div class="dts"><div class="dbs w7 dg">${[0,1,2,3,4,5,6].map(btn).join('')}</div><div class="dbs w7 dg">${[7,8,9,10,11,12,13].map(btn).join('')}</div></div>
       <div class="row"><input class="in" type="date" style="width:150px" value="${esc(s.date||'')}" data-sf="date" data-i="${iid}" aria-label="날짜">${s.date&&!inGrid?`<span class="lbl">${esc(schedTxt(s,1))}</span>`:''}</div>`;
-    if(t==='wk')body=`<div class="row"><input class="in" style="width:150px" value="${esc(s.hint||'')}" placeholder="주말 · 평일 저녁" data-sf="hint" data-i="" maxlength="12" aria-label="대략적인 시간"><span class="lbl">${wkLive(s)?esc(schedTxt({t:'date',date:s.date,time:s.time},1)):'이번 주 시간 미정'}</span></div>`+body;}
+    if(t==='wk')body=`<div class="row"><input class="in" style="width:150px" value="${esc(s.hint||'')}" data-sf="hint" data-i="" maxlength="12" aria-label="대략적인 시간"><span class="lbl">${wkLive(s)?esc(schedTxt({t:'date',date:s.date,time:s.time},1)):'이번 주 시간 미정'}</span></div>`+body;}
   const tm=t==='fix'||t==='date'||t==='wk'?`<input class="in tm" inputmode="numeric" placeholder="--:--" value="${esc(s.time||'')}" data-sf="time" data-i="${iid}" aria-label="시간">`:'';
   return `<div class="sed"><div class="row">${qeInput(ui.be,iid)}</div><div class="row"><div class="seg" role="group">${opts.map(([v,l])=>`<button class="${t===v?'on':''}" data-act="st" data-i="${iid}" data-v="${v}" aria-pressed="${t===v}">${l}</button>`).join('')}</div>${tm}</div>${body}</div>`;
 }
@@ -1115,11 +1126,11 @@ function render(){
     const sl=slots(c),cnt=weeklyCount(c),rem=remainingList(c),mon=monthlySlot(c);
     let ts='';for(let i=0;i<12;i++)ts+=tile(c,sl[i]);
     ts+=`<span class="sep"></span>`+tile(c,mon,true);
-    const cc=S.cache[c.id]||{};
+    const cc=S.cache[c.id]||{},ci=S.chars.indexOf(c);
     const im=charImg(c);
     const fl=ui.flashC&&ui.flashC.id===c.id&&Date.now()-ui.flashC.at<1400?Date.now()-ui.flashC.at:-1;
     cards+=`<div class="card${fl>=0?' flash':''}" data-act="bset" data-c="${c.id}"${fl>0?` style="animation-delay:-${fl}ms"`:''}>
-      <div class="av${isAv(im)?' ax':''}" style="${im?bodyStyle(im,84,96):`background:url('${SIL}') center 60%/150px no-repeat,var(--panel2)`}">${c.manual?'<span class="tg2">직접 체크</span>':''}</div>
+      ${S.chars.length>1?`<span class="cmo">${ci>0?`<button data-act="cmv" data-c="${c.id}" data-d="-1" aria-label="${esc(nick(c))} 앞으로" title="앞으로">${I.l}</button>`:''}${ci<S.chars.length-1?`<button data-act="cmv" data-c="${c.id}" data-d="1" aria-label="${esc(nick(c))} 뒤로" title="뒤로">${I.r}</button>`:''}</span>`:''}<div class="av${isAv(im)?' ax':''}" style="${im?bodyStyle(im,84,96):`background:url('${SIL}') center 60%/150px no-repeat,var(--panel2)`}">${c.manual?'<span class="tg2">직접 체크</span>':''}</div>
       <div class="cb"><div class="ci"><div class="cn"><span class="al ${c.name?'':'nn'}" title="${esc(nick(c))}">${esc(nick(c))}</span>${c.name?'':`<button class="btn sm nnb" data-act="bset" data-c="${c.id}" data-f="name">닉네임 입력</button>`}<span class="lv">${esc(job(c))}</span></div>
         ${(()=>{const r=revenue(c);return `<div class="rev"><b>${won(r.wkC)}</b><span>/ ${won(r.wk)}</span>${r.mo?`<em>월간 ${r.moC?'<b>'+won(r.moC)+'</b>':won(r.mo)}</em>`:''}</div>`;})()}
         <div class="cnt"><div class="bar"><i style="width:${cnt/12*100}%"></i></div><b>${cnt}<span>/12</span></b>${(sl.length||mon)&&!rem.length?'<span class="rem z">완료</span>':''}</div></div>
@@ -1159,16 +1170,16 @@ function bossModal(){
   const row=(b,isMon)=>{const cur=isMon?dr.monthly:dr.sel[b.id];
     const dis=!isMon&&!cur&&full;
     const [pb,pi]=cur?itemOf(c.id,b.id):[null,null];const pdone=pi&&itemDone(pi),pcd=pdone&&pi.c?clearDay(pi.c,pi.b):null;
-    return `<div class="br ${cur?'on':''}">${icon(b.id,26,null)}<span class="bn">${b.id}${pb?`<small class="sch" style="--g:${pb.color}">${pdone?'✓'+(pcd!=null?' '+DAYS[pcd]:''):esc(schedMini(schedOf(pb,pi)))}</small>`:''}</span>
+    return `<div class="br ${cur?'on':''}">${icon(b.id,22,null)}<span class="bn">${b.id}${pb?`<small class="sch" style="--g:${pb.color}">${pdone?'✓'+(pcd!=null?' '+DAYS[pcd]:''):esc(schedMini(schedOf(pb,pi)))}</small>`:''}</span>
       <div class="dc">${b.d.map(d=>`<button class="${cur&&cur.d===d?'on '+d:''}" ${dis?'disabled':''} data-act="bd" data-b="${b.id}" data-d="${d}">${DIFF_KO[d]}</button>`).join('')}</div>
       ${cur&&pb?`<span class="psz">${bSize(pb)}인</span>`:''}${cur&&!pb?`<div class="stp"><button data-act="bn" data-b="${b.id}" data-d="-1">−</button><span>${cur.n}</span><button data-act="bn" data-b="${b.id}" data-d="1">+</button></div>`:''}${cur?(()=>{const sz=shareSize(c,b.id,cur.n);return `<span class="amt" title="${esc(DIFF_KO[cur.d]+' '+won(price(b.id,cur.d))+' ÷ '+sz+'인'+(pb?' (파티)':''))}">${price(b.id,cur.d)?won(share(b.id,cur.d,sz)):'—'}</span>`;})():''}</div>`;};
   const dwk=Object.entries(dr.sel).reduce((a,[b,x])=>a+share(b,x.d,shareSize(c,b,x.n)),0),dmo=dr.monthly?share(MONTHLY.id,dr.monthly.d,shareSize(c,MONTHLY.id,dr.monthly.n)):0;
-  return `<div class="mb" data-act="close"><div class="md wide" data-stop="1">
+  return `<div class="mb" data-act="close"><div class="md wide cbm" data-stop="1">
     <div class="ph"><h2 class="mh">${esc(nick(c))}</h2><span class="ctr ${full?'full':''}">${n}/12</span><span class="mt">${won(dwk)}${dmo?`<i>월간 ${won(dmo)}</i>`:''}</span><span class="sp"></span><button class="btn sm ghost" data-act="close" aria-label="닫기">${I.x}</button></div>
     <div class="bd">
       <div class="row">${c.manual?`<span class="lbl">닉네임</span><input class="in ${c.name?'':'need'}" id="cfn" style="width:150px" maxlength="12" value="${esc(c.name)}" placeholder="${esc(nick(c))}" data-cf="name">
         <button class="btn sm" data-act="clook">조회</button><span class="lbl">이미지 URL</span><input class="in" style="width:200px" value="${esc(c.img||'')}" data-cf="img">`:`<span class="lbl">${esc(job(c))}</span>`}
-        <span class="sp"></span><button class="btn sm ghost" data-act="cmv" data-d="-1" aria-label="앞으로">${I.l}</button><button class="btn sm ghost" data-act="cmv" data-d="1" aria-label="뒤로">${I.r}</button><button class="btn sm dng" data-act="cdel">삭제</button></div>
+        <span class="sp"></span><button class="btn sm dng" data-act="cdel">삭제</button></div>
       <div class="bl">${WEEKLY.map(b=>row(b,false)).join('')}</div>
       <div class="bl">${row(MONTHLY,true)}</div>
     </div>
@@ -1188,7 +1199,7 @@ function modalHtml(){
   if(m==='boss')return bossModal();
   if(m==='acc'){
     const a=ui.acc;const ex=n=>S.chars.find(c=>c.name===n);
-    const worlds=[...new Set(account.map(x=>x.world))];
+    const worlds=[...new Set(account.map(x=>x.world))].filter(pickW).sort((x,y)=>WORLDS.indexOf(x)-WORLDS.indexOf(y));
     const list=account.filter(x=>(a.world==='all'||x.world===a.world)&&(a.low||x.level>=200)&&(!a.q||x.name.includes(a.q)||(x.cls||'').includes(a.q)));
     const ns=Object.keys(a.sel).filter(k=>a.sel[k]).length;
     return `<div class="mb" data-act="close"><div class="md wide" data-stop="1">${head('계정 캐릭터')}<div class="bd">
@@ -1303,7 +1314,7 @@ document.addEventListener('click',e=>{
     case 'bclear':ui.draft.sel={};ui.draft.monthly=null;render();break;
     case 'bsave':{const ch=charById(ui.bc);ch.custom=true;ch.edited=Date.now();ch.sel=ui.draft.sel;ch.monthly=ui.draft.monthly;ch.fill=false;ui.modal=null;reconcile(S);save();render();break;}
     case 'breset':{const ch=charById(ui.bc);ch.custom=false;ch.sel={};ch.monthly=null;ch.fill=false;ui.modal=null;reconcile(S);save();render();break;}
-    case 'cmv':{const i=S.chars.findIndex(x=>x.id===ui.bc),j=i+ +t.dataset.d;if(j>=0&&j<S.chars.length){[S.chars[i],S.chars[j]]=[S.chars[j],S.chars[i]];save();render();}break;}
+    case 'cmv':{const i=S.chars.findIndex(x=>x.id===(c||ui.bc)),j=i+ +t.dataset.d;if(j>=0&&j<S.chars.length){[S.chars[i],S.chars[j]]=[S.chars[j],S.chars[i]];save();render();}break;}
     case 'cdel':{const snap=JSON.stringify(S);const ch=charById(ui.bc);S.chars=S.chars.filter(x=>x.id!==ui.bc);S.bundles.forEach(b=>b.items=b.items.filter(x=>x.c!==ui.bc));ui.modal=null;save();render();undoToast(`${alias(ch)} 삭제됨`,snap);break;}
     case 'clook':{const ch=charById(ui.bc);if(!ch.name)break;lookupName(ch.name).then(r=>{S.cache[ch.id]=Object.assign(S.cache[ch.id]||{},r);ch.cls=r.cls;ch.level=r.level;save();render();}).catch(er=>toast(er.message));break;}
     case 'acc':openAcc();break;
