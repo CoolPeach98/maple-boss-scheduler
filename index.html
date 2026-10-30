@@ -432,6 +432,21 @@ select.in{padding:0 4px}
 .md.cbm{width:640px}
 .cbm .br{padding:2px 4px;gap:8px}.cbm .dc button{height:22px}.cbm .stp button{height:22px}
 .cbm .bl+.bl{margin-top:6px}
+/* v22: people, alt characters, world lock */
+.md.pm{width:620px}
+.pr{border-bottom:1px solid var(--line);padding:8px 0;display:flex;flex-direction:column;gap:6px}
+.prh{display:flex;align-items:center;gap:8px}.prh .pnk{font-size:13px}.prh small,.mchip small{color:var(--mu2);font-size:11px;margin-left:4px}
+.pcn{color:var(--mu2);font-size:12px}
+.pms{height:26px;font-size:12px;width:auto;color:var(--mu)}
+.pal{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.mchip.alt{background:var(--panel2);font-weight:500}
+.mchip .mk{width:auto;padding:0 5px;font-size:11px;color:var(--mu2)}.mchip .mk:hover{color:var(--tx)}
+.pai{height:26px;width:120px;font-size:12px}
+.dup{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line2);border-radius:5px;background:var(--panel2);font-size:12px}
+.dup .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--acc);margin-right:4px}
+.ck2.lk{color:var(--tx)}.ck2.lk input{opacity:.7}.ck2 .xr{color:var(--mu2);font-size:11px;margin-left:6px;font-weight:500}
+.pcs{height:24px;font-size:11px;width:auto;max-width:120px;color:var(--mu2);padding:0 2px}.pcs.on{color:var(--tx)}
+.bc .pcx{display:block;color:var(--mu2);font-size:10px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-decoration:none}
 </style>
 </head>
 <body>
@@ -568,14 +583,16 @@ function normalize(s){
   if(s&&typeof s==='object'&&!Array.isArray(s.bundles)){s=normalize3(s);s.bundles=toBundles(s);for(const k of ['parties','groups','members','trayClosed','v3'])delete s[k];}
   if(!s||typeof s!=='object')s={chars:[],bundles:[],ov:blankOv(),cache:{},imgs:{}};
   s.v=4;s.chars=Array.isArray(s.chars)?s.chars.filter(c=>c&&c.id):[];
-  s.ppl=s.ppl&&typeof s.ppl==='object'?s.ppl:{};
+  s.ppl=s.ppl&&typeof s.ppl==='object'?s.ppl:{}; // v22: legacy member-world cache, folded into people[].ws
   s.ov=s.ov&&s.ov.w&&s.ov.mo?s.ov:blankOv();s.cache=s.cache||{};s.imgs=s.imgs||{};
   for(const c of s.chars){c.sel=c.sel||{};for(const b of Object.keys(c.sel))if(!BMAP[b]||BMAP[b].monthly)delete c.sel[b];}
   const cids=new Set(s.chars.map(c=>c.id));
   s.bundles=(Array.isArray(s.bundles)?s.bundles:[]).filter(b=>b&&b.id).map(b=>{
     const members=[...new Set((Array.isArray(b.members)?b.members:[]).map(x=>String(x).trim()).filter(Boolean))].slice(0,5);
     return {id:b.id,name:String(b.name||''),color:/^#[0-9a-f]{6}$/i.test(b.color||'')?b.color:COLORS[0],members,open:Math.max(0,Math.min(5-members.length,+b.open||0)),cross:!!b.cross,xo:!!b.xo,memo:String(b.memo||''),
-      sched:validS(b.sched)||{t:'none'},items:(Array.isArray(b.items)?b.items:[]).filter(it=>it&&BMAP[it.b]).map(it=>({id:it.id||uid('i'),b:it.b,c:cids.has(it.c)?it.c:null,d:BMAP[it.b].d.includes(it.d)?it.d:'',o:validS(it.o,1),dk:it.dk||null}))};});
+      sched:validS(b.sched)||{t:'none'},pids:(Array.isArray(b.pids)?b.pids:[]).map(String),items:(Array.isArray(b.items)?b.items:[]).filter(it=>it&&BMAP[it.b]).map(it=>({id:it.id||uid('i'),b:it.b,c:cids.has(it.c)?it.c:null,d:BMAP[it.b].d.includes(it.d)?it.d:'',o:validS(it.o,1),dk:it.dk||null,pc:it.pc&&typeof it.pc==='object'&&!Array.isArray(it.pc)?{...it.pc}:null}))};});
+  s.people=(Array.isArray(s.people)?s.people:[]).filter(p=>p&&p.id&&String(p.nick||'').trim()).map(p=>({id:String(p.id),nick:String(p.nick).trim(),alts:[...new Set((Array.isArray(p.alts)?p.alts:[]).map(x=>String(x).trim()).filter(Boolean))].filter(x=>x!==String(p.nick).trim()).slice(0,20),ws:p.ws&&typeof p.ws==='object'?p.ws:{}}));
+  syncPeople(s);delete s.ppl;
   reconcile(s);
   return s;
 }
@@ -601,7 +618,7 @@ let ui={tf:{b:'',c:''},be:null,split:null,wo:0,pf:loadPf(),pfDone:null,flashB:nu
 let account=[];
 // group members ride along on every party of that group
 function gmOf(p,gs,ms){const g=p.g&&gs.find(x=>x.id===p.g);return g?(g.members||[]).filter(id=>ms.some(m=>m.id===id)):[];}
-function save(){try{localStorage.setItem(LS,JSON.stringify(S));}catch(e){toast('저장 실패: 브라우저 저장공간 부족');}}
+function save(){if(S.people)syncPeople(S);try{localStorage.setItem(LS,JSON.stringify(S));}catch(e){toast('저장 실패: 브라우저 저장공간 부족');}}
 function resetCheck(){let ch=false;
   if(S.ov.w.k!==weekKey()){S.ov.w={k:weekKey(),m:{}};ch=true;}
   if(S.ov.mo.k!==monthKey()){S.ov.mo={k:monthKey(),m:{}};ch=true;}
@@ -702,21 +719,47 @@ const bEmpty=b=>!b.name&&!b.members.length;
 const bTip=b=>bTextH(b)||bShort(b);
 const NM='<span class="nm">파티원 미입력</span>';
 function bTextH(b){const t=bText(b);if(!t)return '';return S.bundles.some(x=>x!==b&&bText(x)===t)?t+' · '+schedMini(b.sched):t;}
-/* people: world lookup (cached in S.ppl) -> automatic 월드 통합; a manual checkbox (xo) wins */
-const pWorld=n=>(S.ppl[n]||{}).w||'';
+/* v22 people: a party member is a person (representative nick + alt characters). Bundles hold person ids (pids);
+   b.members is the list of representative nicks, kept in sync: editing b.members (names) re-resolves pids on save. */
+function pById(id,st=S){return st.people.find(p=>p.id===id);}
+function pChars(p){return [p.nick,...p.alts];}
+function findPerson(n,st=S){n=String(n||'').trim();if(!n)return null;return st.people.find(p=>p.nick===n)||st.people.find(p=>p.alts.includes(n))||null;}
+function repOf(n){const p=findPerson(n);return p?p.nick:String(n||'').trim();}
+function refreshMembers(st=S){for(const b of st.bundles)b.members=b.pids.map(id=>(pById(id,st)||{}).nick).filter(Boolean);}
+function syncPeople(st){if(!Array.isArray(st.people))st.people=[];
+  const legacy=st.ppl&&typeof st.ppl==='object'?st.ppl:null;
+  for(const b of st.bundles){b.pids=(b.pids||[]).filter(id=>pById(id,st));
+    const derived=b.pids.map(id=>pById(id,st).nick);
+    if(JSON.stringify(derived)!==JSON.stringify(b.members)){const ids=[];
+      for(const n of b.members){let p=findPerson(n,st);if(!p){p={id:uid('h'),nick:String(n).trim(),alts:[],ws:{}};st.people.push(p);}if(!ids.includes(p.id))ids.push(p.id);}
+      b.pids=ids.slice(0,5);}
+    b.members=b.pids.map(id=>pById(id,st).nick);
+    for(const it of b.items){if(!it.pc)continue;for(const [k,v] of Object.entries(it.pc)){const p=b.pids.includes(k)&&pById(k,st);if(!p||!pChars(p).includes(v))delete it.pc[k];}if(!Object.keys(it.pc).length)it.pc=null;}}
+  const used=new Set(st.bundles.flatMap(b=>b.pids));st.people=st.people.filter(p=>used.has(p.id)||p.alts.length);
+  if(legacy)for(const p of st.people)for(const n of pChars(p))if(legacy[n]&&!p.ws[n])p.ws[n]=legacy[n];}
+function cwOf(n){for(const p of S.people){const c=p.ws&&p.ws[n];if(c)return c;}return null;}
+const pWorld=n=>{const c=cwOf(n);return (c&&c.w)||'';};
+// characters a person brings to this bundle: the per-boss character where set, else the representative nick
+function bPeopleChars(b){const out=[];for(const id of b.pids){const p=pById(id);if(!p)continue;const set=new Set();
+    for(const it of b.items){const v=it.pc&&it.pc[id];set.add(v||p.nick);}if(!b.items.length)set.add(p.nick);for(const n of set)out.push([p,n]);}return out;}
+const allLookupNames=()=>[...new Set(S.bundles.flatMap(b=>bPeopleChars(b).map(x=>x[1])))];
+// 월드 통합 lock: any member character found on a world outside my characters' world(s) in this bundle
+function lockInfo(b){const mw=myWorlds(b);if(!mw.size)return null;const r=[];
+  for(const [p,n] of bPeopleChars(b)){const c=p.ws[n];if(c&&c.w&&!mw.has(c.w))r.push((n===p.nick?n:p.nick+'('+n+')')+': '+c.w);}return r.length?r:null;}
 function myWorlds(b){const w=new Set();for(const it of b.items){const c=charById(it.c);const x=c&&((S.cache[c.id]||{}).world||c.world);if(x)w.add(x);}
   if(!w.size)for(const c of S.chars){const x=(S.cache[c.id]||{}).world||c.world;if(x)w.add(x);}return w;}
-function autoCross(b){const ks=b.members.map(pWorld).filter(Boolean);if(!ks.length)return null;const mw=myWorlds(b);if(!mw.size)return null;return ks.some(w=>!mw.has(w));}
-function isX(b){if(b.xo)return b.cross;const a=autoCross(b);return a===null?b.cross:a;}
+function isX(b){return !!lockInfo(b)||!!b.cross;}
 const pq=[];let pqBusy=false;
+let pqT=null;
 function lookupPeople(names){const now=Date.now();
-  for(const n of names){const c=S.ppl[n];if(c&&(c.w||now-c.t<864e5))continue;if(!pq.includes(n))pq.push(n);}runPQ();}
+  for(const n0 of names){const n=String(n0||'').trim();if(!/^[가-힣A-Za-z0-9]{2,12}$/.test(n))continue;const c=cwOf(n);if(c&&now-c.t<864e5)continue;if(!pq.includes(n))pq.push(n);}
+  clearTimeout(pqT);if(pq.length)pqT=setTimeout(runPQ,400);}
 async function runPQ(){if(pqBusy)return;pqBusy=true;
-  while(pq.length){const n=pq.shift();
-    try{if(key){const {ocid}=await api('/id',{character_name:n});const r=await api('/character/basic',{ocid});S.ppl[n]={w:r.world_name||'',t:Date.now()};}else{const r=await wlook(n);S.ppl[n]={w:r.world||'',t:Date.now()};}}
-    catch(e){if(/한도|네트워크|점검|서버/.test(e.message)){pq.length=0;break;}S.ppl[n]={w:'',t:Date.now(),f:1};}
-    for(const b of S.bundles)if(!b.xo&&b.members.includes(n)){const a=autoCross(b);if(a!==null)b.cross=a;}
-    save();render();await new Promise(z=>setTimeout(z,300));}
+  while(pq.length){const n=pq.shift();let rec;
+    try{const r=await wlook(n);rec={w:r.world||'',t:Date.now()};}
+    catch(e){if(/한도|네트워크|점검|서버/.test(e.message)){pq.length=0;break;}rec={w:'',t:Date.now(),f:1};}
+    for(const p of S.people)if(pChars(p).includes(n))p.ws[n]=rec;
+    save();render();if(pq.length)await new Promise(z=>setTimeout(z,300));}
   pqBusy=false;}
 const allPeople=()=>{const m=new Map();for(const b of S.bundles)for(const n of b.members)m.set(n,(m.get(n)||0)+b.items.length);return [...m.entries()].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]));};
 const pfOn=()=>ui.pf.length>0;
@@ -816,7 +859,7 @@ async function wrefresh(all){if(wBusy)return;wBusy=true;
   for(const c of todo){try{const r=await wlook(c.name);const cc=S.cache[c.id]=Object.assign(S.cache[c.id]||{},{img:r.img,level:r.level,cls:r.cls,world:r.world,t:r.t});if(c.manual){c.cls=r.cls;c.level=r.level;}save();render();}
     catch(e){if(/네트워크|서버|한도/.test(e.message)){if(all)toast(e.message);break;}}
     await new Promise(z=>setTimeout(z,200));}
-  if(all)ui.busy=false;wBusy=false;render();lookupPeople(allPeople().map(x=>x[0]));}
+  if(all)ui.busy=false;wBusy=false;render();lookupPeople(allLookupNames());}
 /* ---------- API ---------- */
 const NXERR={OPENAPI00001:'넥슨 서버 오류',OPENAPI00002:'API 권한 없음',OPENAPI00003:'캐릭터를 찾을 수 없음',OPENAPI00004:'캐릭터를 찾을 수 없음',OPENAPI00005:'API 키가 올바르지 않음',OPENAPI00006:'잘못된 요청',OPENAPI00007:'요청 한도 초과',OPENAPI00009:'데이터 준비 중',OPENAPI00010:'게임 점검 중',OPENAPI00011:'API 점검 중'};
 async function api(path,params){
@@ -894,7 +937,7 @@ async function refresh(light){
   if(stop)errs.unshift(stop);
   S.fetchedAt=new Date().toISOString();save();
   ui.err=[...new Set(errs)].join(' · ');ui.busy=false;render();
-  if(!stop)lookupPeople(allPeople().map(x=>x[0]));
+  if(!stop)lookupPeople(allLookupNames());
 }
 const hasWeekly=j=>(j.boss_contents||[]).some(e=>e.cycle==='bossWeekly'&&String(e.registration_flag).toLowerCase()==='true');
 const kstDate=back=>kst(Date.now()-back*D).toISOString().slice(0,10);
@@ -981,7 +1024,7 @@ function bundleCard(b,st,next,off=0){
     const o=it.o&&occ(it.o,ws);const ol=!off&&o&&!done&&passed(o,now)&&(it.o.t==='date'||o.at<ws+7*D);
     if(S.compact&&off)return `<span class="bti" title="${esc(DIFF_KO[d]+' '+it.b+' · '+(c?nick(c):'캐릭터 미정'))}">${ic(it.b)}<span class="bg ${d}">${DIFF_LT[d]}</span></span>`;
     if(S.compact)return `<button class="bti ${done?'clr':''}" data-act="itog" data-id="${b.id}" data-i="${it.id}" aria-pressed="${done}" title="${esc(DIFF_KO[d]+' '+it.b+' · '+(c?nick(c):'캐릭터 미정'))}">${ic(it.b)}<span class="bg ${d}">${DIFF_LT[d]}</span></button>`;
-    return `<div class="bro ${done?'done':''}">${icon(it.b,24,d,'s')}<span class="bb">${esc(it.b)}<i>${DIFF_KO[d]}</i></span><span class="bc ${c?'':'nm'}">${c?esc(nick(c)):'캐릭터 미정'}</span>${it.o?`<span class="ot ${ol?'late':''}">${esc(schedTxt(it.o,1))}</span>`:''}${off?'<span></span>':`<button class="pk ${done?'on':''}" data-act="itog" data-id="${b.id}" data-i="${it.id}" aria-pressed="${done}" aria-label="${esc(it.b+(done?' 클리어 취소':' 클리어 체크'))}"></button>`}</div>`;}).join('');
+    return `<div class="bro ${done?'done':''}">${icon(it.b,24,d,'s')}<span class="bb">${esc(it.b)}<i>${DIFF_KO[d]}</i></span><span class="bc ${c?'':'nm'}">${c?esc(nick(c)):'캐릭터 미정'}${pcText(it)?`<small class="pcx" title="${esc(pcText(it))}">${esc(pcText(it))}</small>`:''}</span>${it.o?`<span class="ot ${ol?'late':''}">${esc(schedTxt(it.o,1))}</span>`:''}${off?'<span></span>':`<button class="pk ${done?'on':''}" data-act="itog" data-id="${b.id}" data-i="${it.id}" aria-pressed="${done}" aria-label="${esc(it.b+(done?' 클리어 취소':' 클리어 체크'))}"></button>`}</div>`;}).join('');
   return `<div class="bk ${allDone?'done':''} ${off?'nx':''} ${next?'next':''} ${ui.flashB===b.id?'flash':''}" id="b-${b.id}" style="--acc:${b.color}">
     <div class="bh"><button class="bt" data-act="bed" data-id="${b.id}" title="${esc(bTip(b))}">${bTitle(b)}</button>${off?'':showMi(b)?miInput(b):''}${isX(b)?'<span class="xw">통합</span>':''}<span class="sz">${sz}인</span>
       <button class="bs ${b.sched.t} ${sLate?'late':''} ${sToday?'td':''} ${st.late?'late':''}" data-act="bed" data-id="${b.id}" data-f="sch">${b.sched.t==='fix'?'<i>매주</i>':b.sched.t==='wk'?'<i>조율</i>':''}${esc(b.sched.t==='none'?'미정':schedTxt(b.sched,1))}</button></div>
@@ -1064,9 +1107,9 @@ function wizModal(){const w=ui.wz;const b=w&&bById(w.ids[w.i]);if(!b){ui.modal=n
     <div class="bd">
       <div class="wzi">${its.map(it=>{const c=charById(it.c),d=itemDiff(it);return `<span class="wzr">${icon(it.b,22,d,'s')}<b>${esc(it.b)}</b><i>${DIFF_KO[d]}</i><span>${c?esc(nick(c)):'캐릭터 미정'}</span></span>`;}).join('')}</div>
       <div class="mems">${b.members.map((n,i)=>`<span class="mchip">${esc(n)}<button data-act="bmdel" data-v="${i}" aria-label="${esc(n)} 빼기">${I.x}</button></span>`).join('')}
-        ${b.members.length<5?`<input class="in" id="bmn" list="bppl" style="width:150px" placeholder="닉네임" maxlength="12" autocomplete="off"><datalist id="bppl">${sug.map(n=>`<option value="${esc(n)}">`).join('')}</datalist><button class="btn sm" data-act="bmadd">추가</button>`:''}
+        ${b.members.length<5?`<input class="in" id="bmn" list="bppl" style="width:150px" placeholder="닉네임" maxlength="12" autocomplete="off"><datalist id="bppl">${pplOpts(b.members)}</datalist><button class="btn sm" data-act="bmadd">추가</button>`:''}
         <span class="opn"><span class="lbl">빈자리</span><div class="stp" style="margin-left:0"><button data-act="bopen" data-d="-1" aria-label="빈자리 감소">−</button><span>${b.open||0}</span><button data-act="bopen" data-d="1" aria-label="빈자리 증가">+</button></div></span>
-        <label class="ck2"><input type="checkbox" data-bf="cross" ${isX(b)?'checked':''}> 월드 통합</label></div>
+        ${xBox(b)}</div>
       ${sug.length&&b.members.length<5?`<div class="sug">${sug.map(n=>`<button class="chip" data-act="wzs" data-v="${esc(n)}">${esc(n)}</button>`).join('')}</div>`:''}
     </div>
     <div class="ft"><button class="btn" data-act="close" data-force="1">그만</button><span class="sp"></span><button class="btn ghost" data-act="wzskip">건너뛰기</button><button class="btn pri" data-act="wznext">${last?'완료':'다음'}</button></div>
@@ -1086,6 +1129,40 @@ function schedEd(s,iid){
   const tm=t==='fix'||t==='date'||t==='wk'?`<input class="in tm" inputmode="numeric" placeholder="--:--" value="${esc(s.time||'')}" data-sf="time" data-i="${iid}" aria-label="시간">`:'';
   return `<div class="sed"><div class="row">${qeInput(ui.be,iid)}</div><div class="row"><div class="seg" role="group">${opts.map(([v,l])=>`<button class="${t===v?'on':''}" data-act="st" data-i="${iid}" data-v="${v}" aria-pressed="${t===v}">${l}</button>`).join('')}</div>${tm}</div>${body}</div>`;
 }
+// which character a member brings for this boss (only people with alts; default none)
+function pcPick(b,it){return b.pids.map(id=>pById(id)).filter(p=>p&&p.alts.length).map(p=>{const v=(it.pc||{})[p.id]||'';
+  return `<select class="in pcs ${v?'on':''}" data-pc="${p.id}" data-i="${it.id}" aria-label="${esc(p.nick)} 캐릭터" title="${esc(p.nick)}">${['',...pChars(p)].map(n=>`<option value="${esc(n)}" ${n===v?'selected':''}>${n?esc(n):esc(p.nick)+' ·'}</option>`).join('')}</select>`;}).join('');}
+const pcText=it=>it.pc?Object.entries(it.pc).map(([id,n])=>{const p=pById(id);return p?(n===p.nick?n:p.nick+' '+n):'';}).filter(Boolean).join(', '):'';
+/* v22 people manager: alts, representative, merge (identical parties after a merge are offered, never merged silently) */
+function pplUse(id){return S.bundles.filter(b=>b.pids.includes(id)).length;}
+function pplModal(){const ps=S.people.slice().sort((a,b)=>pplUse(b.id)-pplUse(a.id)||a.nick.localeCompare(b.nick));
+  const dup=(ui.dupes||[]).map(g=>g.map(bById).filter(Boolean)).filter(g=>g.length>1);
+  return `<div class="mb" data-act="close"><div class="md pm" data-stop="1"><div class="ph"><h2>파티원</h2><span class="ctr">${ps.length}</span><span class="sp"></span><button class="btn sm ghost" data-act="close" aria-label="닫기">${I.x}</button></div><div class="bd">
+    ${dup.map(g=>`<div class="dup"><span>${g.map(b=>`<span class="dot" style="--acc:${b.color}"></span>${esc(bShort(b))}`).join(' · ')}</span><span class="lbl">같은 파티원 ${g.length}파티</span><span class="sp"></span><button class="btn sm" data-act="bmerge" data-v="${g.map(b=>b.id).join(',')}">한 파티로</button><button class="btn sm ghost" data-act="dupx" data-v="${g.map(b=>b.id).join(',')}">그대로</button></div>`).join('')}
+    ${ps.length?ps.map(p=>{const w=pWorld(p.nick),n=pplUse(p.id);return `<div class="pr" id="pr-${p.id}">
+      <div class="prh"><b class="pnk">${esc(p.nick)}</b>${w?`<small>${esc(w)}</small>`:''}<span class="pcn">${n?n+'파티':''}</span><span class="sp"></span>
+        ${ps.length>1?`<select class="in pms" data-pm="${p.id}" aria-label="${esc(p.nick)}와 합치기"><option value="">합치기</option>${ps.filter(x=>x!==p).map(x=>`<option value="${x.id}">${esc(x.nick)}</option>`).join('')}</select>`:''}</div>
+      <div class="pal">${p.alts.map(a=>`<span class="mchip alt">${esc(a)}${pWorld(a)?`<small>${esc(pWorld(a))}</small>`:''}<button class="mk" data-act="prep" data-id="${p.id}" data-v="${esc(a)}" title="대표 닉네임으로">대표</button><button data-act="padel" data-id="${p.id}" data-v="${esc(a)}" aria-label="${esc(a)} 빼기">${I.x}</button></span>`).join('')}
+        <input class="in pai" id="pa-${p.id}" data-pa="${p.id}" placeholder="부캐 닉네임" maxlength="12" autocomplete="off" aria-label="${esc(p.nick)} 부캐 닉네임"></div></div>`;}).join(''):'<span class="lbl">파티원 없음</span>'}
+  </div></div></div>`;}
+function addAlt(p,n){n=String(n||'').trim();if(!n||pChars(p).includes(n))return false;const o=findPerson(n);
+  if(o){toast(n===o.nick?`${n}: 이미 있는 파티원 · 합치기로 묶어`:`${n}: ${o.nick}의 캐릭터`);return false;}p.alts.push(n);return true;}
+function setRep(p,a){if(!p.alts.includes(a))return;const old=p.nick;p.alts=[old,...p.alts.filter(x=>x!==a)];p.nick=a;refreshMembers();
+  ui.pf=ui.pf.map(x=>x===old?a:x);savePf();}
+function mergePeople(keep,gone){if(!keep||!gone||keep===gone)return;
+  keep.alts=[...new Set([...keep.alts,gone.nick,...gone.alts])].filter(x=>x!==keep.nick);Object.assign(keep.ws,Object.fromEntries(Object.entries(gone.ws||{}).filter(([k])=>!keep.ws[k])));
+  for(const b of S.bundles){if(b.pids.includes(gone.id)){b.pids=[...new Set(b.pids.map(x=>x===gone.id?keep.id:x))];}
+    for(const it of b.items)if(it.pc&&it.pc[gone.id]){if(!it.pc[keep.id])it.pc[keep.id]=it.pc[gone.id];delete it.pc[gone.id];}}
+  S.people=S.people.filter(x=>x!==gone);refreshMembers();ui.pf=[...new Set(ui.pf.map(x=>x===gone.nick?keep.nick:x))];savePf();
+  const g=new Map();for(const b of S.bundles){if(!b.pids.length||!b.items.length)continue;const k=[...b.pids].sort().join('|');if(!g.has(k))g.set(k,[]);g.get(k).push(b.id);}
+  ui.dupes=[...g.values()].filter(x=>x.length>1&&x.some(id=>bById(id).pids.includes(keep.id)));}
+function mergeBundles(ids){const bs=ids.map(bById).filter(Boolean);if(bs.length<2)return;const base=bs[0];
+  for(const o of bs.slice(1)){for(const it of o.items){if(it.c&&base.items.some(x=>x.c===it.c&&x.b===it.b))continue;
+      const own=it.o||(o.sched.t!=='none'&&o.sched.t!=='wk'&&JSON.stringify(o.sched)!==JSON.stringify(base.sched)?{...o.sched}:null);base.items.push({...it,o:own});}
+    if(o.memo&&!base.memo.includes(o.memo))base.memo=[base.memo,o.memo].filter(Boolean).join(' · ').slice(0,40);base.open=Math.max(base.open||0,o.open||0);base.cross=base.cross||o.cross;
+    S.bundles=S.bundles.filter(x=>x!==o);}
+  ui.dupes=(ui.dupes||[]).filter(g=>!g.some(id=>ids.includes(id)));ui.flashB=base.id;}
+function xBox(b){const lk=lockInfo(b);return `<label class="ck2 ${lk?'lk':''}" ${lk?`title="${esc(lk.join(', '))}"`:''}><input type="checkbox" data-bf="cross" ${isX(b)?'checked':''} ${lk?'disabled':''}> 월드 통합${lk?`<small class="xr">${esc(lk.join(', '))}</small>`:''}</label>`;}
 function bundleModal(){
   const b=bById(ui.be);if(!b){ui.modal=null;return '';}
   const its=b.items.slice().sort(itemSort),sz=bSize(b);
@@ -1095,7 +1172,7 @@ function bundleModal(){
   const rows=its.map(it=>{const c=charById(it.c),d=itemDiff(it),sp=ui.split===it.id;
     return `<div class="ero ${sp?'sp':''}"><div class="row">${icon(it.b,24,d,'s')}<span class="bb">${esc(it.b)}</span>
       <select class="in dsel" data-if="d" data-i="${it.id}" aria-label="난이도">${BMAP[it.b].d.map(x=>`<option value="${x}" ${d===x?'selected':''}>${DIFF_KO[x]}</option>`).join('')}</select>
-      <span class="bc ${c?'':'nm'}">${c?esc(nick(c)):'캐릭터 미정'}</span><span class="sp"></span>
+      <span class="bc ${c?'':'nm'}">${c?esc(nick(c)):'캐릭터 미정'}</span>${pcPick(b,it)}<span class="sp"></span>
       <button class="btn sm ${it.o?'':'ghost'} ${sp?'on':''}" data-act="isplit" data-i="${it.id}">${it.o?esc(schedTxt(it.o,1)):'따로'}</button>
       <button class="btn sm ghost" data-act="idel" data-i="${it.id}" aria-label="빼기">${I.x}</button></div>${sp?schedEd(it.o,it.id):''}</div>`;}).join('');
   const pick=S.chars.map(c=>{const sl=slots(c),m=monthlySlot(c);const all=[...sl,...(m?[m]:[])];if(!all.length)return '';
@@ -1105,9 +1182,9 @@ function bundleModal(){
     <div class="ph"><h2 class="mh"><span class="dot"></span>${bText(b)?esc(bText(b)):NM}</h2><span class="ctr">${sz}인</span><span class="mt">${won(its.reduce((a,it)=>a+share(it.b,itemDiff(it),sz),0))}</span><span class="sp"></span><button class="btn sm ghost" data-act="close" aria-label="닫기">${I.x}</button></div>
     <div class="bd">
       <div class="erow"><span class="lbl">파티원</span><div class="mems">${b.members.map((n,i)=>`<span class="mchip">${esc(n)}${pWorld(n)?`<small>${esc(pWorld(n))}</small>`:''}<button data-act="bmdel" data-v="${i}" aria-label="${esc(n)} 빼기">${I.x}</button></span>`).join('')}
-        ${b.members.length<5?`<input class="in" id="bmn" list="bppl" style="width:130px" placeholder="닉네임" maxlength="12"><datalist id="bppl">${known.map(n=>`<option value="${esc(n)}">`).join('')}</datalist><button class="btn sm" data-act="bmadd">추가</button>`:''}
+        ${b.members.length<5?`<input class="in" id="bmn" list="bppl" style="width:130px" placeholder="닉네임" maxlength="12"><datalist id="bppl">${pplOpts(b.members)}</datalist><button class="btn sm" data-act="bmadd">추가</button>`:''}
         <span class="opn"><span class="lbl">빈자리</span><div class="stp" style="margin-left:0"><button data-act="bopen" data-d="-1" aria-label="빈자리 감소">−</button><span>${b.open||0}</span><button data-act="bopen" data-d="1" aria-label="빈자리 증가">+</button></div></span>
-        <label class="ck2"><input type="checkbox" data-bf="cross" ${isX(b)?'checked':''}> 월드 통합</label>${b.xo&&autoCross(b)!==null&&autoCross(b)!==b.cross?`<button class="btn sm ghost" data-act="bxa">자동</button>`:''}</div></div>
+        ${xBox(b)}<button class="btn sm ghost" data-act="pplm">파티원 관리</button></div></div>
       <div class="erow"><span class="lbl">일정</span>${schedEd(b.sched,'')}</div>
       <div class="erow"><span class="lbl">보스</span><div class="ers">${rows||''}${!its.length||ui.pick?`<div class="pick">${pick||'<span class="lbl">캐릭터 보스 설정 후 추가</span>'}</div>`:''}${its.length?`<div class="row" style="padding-top:8px"><button class="btn sm ${ui.pick?'on':''}" data-act="bpick" aria-expanded="${!!ui.pick}">${ui.pick?'닫기':I.plus+'보스'}</button></div>`:''}</div></div>
       <div class="erow"><span class="lbl">이름</span><div class="row"><input class="in" style="width:170px" value="${esc(b.name)}" placeholder="${esc(b.members.join(' · ')||'이름')}" data-bf="name" maxlength="20"><div class="row" style="gap:4px">${sw}</div><input class="in" style="flex:1;min-width:120px" value="${esc(b.memo||'')}" placeholder="메모" data-bf="memo" maxlength="40"></div></div>
@@ -1139,7 +1216,7 @@ function render(){
   const empty=!S.chars.length;
   const stl=staleInfo();
   const ae=document.activeElement,fid=ae&&ae.id&&ae.tagName==='INPUT'?{id:ae.id,v:ae.value,s:ae.selectionStart}:null;
-  ui.miR=true;document.getElementById('app').innerHTML=`<datalist id="pplall">${allPeople().map(x=>`<option value="${esc(x[0])}">`).join('')}</datalist><div class="wrap">
+  ui.miR=true;document.getElementById('app').innerHTML=`<datalist id="pplall">${pplOpts()}</datalist><div class="wrap">
     <div class="top">
       <div class="logo">보스 스케줄러</div>
       <span class="wk"><b>${md(ws)} 목 – ${md(ws+6*D)} 수</b></span>
@@ -1193,10 +1270,12 @@ function modalHtml(){
       <span class="lbl">넥슨 Open API 키</span>
       <div class="row"><input class="in" id="k" type="password" style="flex:1" value="${esc(key)}" placeholder="live_..." autocomplete="off"><button class="btn pri" data-act="savekey">저장</button></div>
       <div class="row"><a href="https://openapi.nexon.com" target="_blank" style="color:var(--mu);font-size:12px">openapi.nexon.com</a></div>
+      ${S.people.length?`<div class="row"><button class="btn" data-act="pplm">파티원 관리</button></div>`:''}
       <details class="bkx" id="bkx" ${ui.bkOpen?'open':''}><summary>백업</summary>
       <div class="row"><button class="btn" data-act="exp">내보내기</button><label class="row" style="gap:5px;color:var(--mu);font-size:12px"><input type="checkbox" id="xk"> 키 포함</label><button class="btn" data-act="imp">가져오기</button><span class="sp"></span><button class="btn dng" data-act="reset" ${ui.busy?'disabled':''}>데이터 초기화</button></div></details>
     </div></div></div>`;
   if(m==='boss')return bossModal();
+  if(m==='ppl')return pplModal();
   if(m==='acc'){
     const a=ui.acc;const ex=n=>S.chars.find(c=>c.name===n);
     const worlds=[...new Set(account.map(x=>x.world))].filter(pickW).sort((x,y)=>WORLDS.indexOf(x)-WORLDS.indexOf(y));
@@ -1246,8 +1325,10 @@ function dupCard(n){const c=S.chars.find(x=>x.name===n);if(!c)return false;ui.mo
 function addAccChar(x,r){const nc={id:uid('c'),alias:'',name:x.name,cls:x.cls,level:x.level,manual:false,custom:false,sel:{},monthly:null,fill:false};
   S.chars.push(nc);S.cache[nc.id]={ocid:x.ocid,img:S.imgs[x.name]||(r&&r.img)||'',world:x.world};ui.modal=null;save();render();flashCard(nc.id);refresh();}
 // a filled seat comes out of the open (빈자리) count first, so the party size stays
-function addMem(b,n){if(!b.members.includes(n)&&b.members.length<5){b.members.push(n);if(b.open)b.open--;b.open=Math.min(b.open,5-b.members.length);lookupPeople([n]);}}
-function closeModal(){if(ui.modal==='wiz'){ui.wz=null;ui.be=null;save();}if(ui.modal==='bundle'){const b=bById(ui.be);if(b&&!b.items.length&&!b.members.length){S.bundles=S.bundles.filter(x=>x!==b);save();}ui.be=null;ui.split=null;}
+function addMem(b,n){n=repOf(n);if(n&&!b.members.includes(n)&&b.members.length<5){b.members.push(n);if(b.open)b.open--;b.open=Math.min(b.open,5-b.members.length);syncPeople(S);lookupPeople(bPeopleChars(b).map(x=>x[1]));}}
+// suggestion options: representative nicks, alts shown as 'alt → main'
+const pplOpts=(skip=[])=>S.people.filter(p=>!skip.includes(p.nick)).flatMap(p=>[`<option value="${esc(p.nick)}">`,...p.alts.map(a=>`<option value="${esc(a)}" label="${esc(a+' → '+p.nick)}">`)]).join('');
+function closeModal(){if(ui.modal==='ppl'){ui.dupes=null;const bk=ui.pplBack;ui.pplBack=null;ui.modal=bk==='bundle'&&bById(ui.be)?'bundle':null;render();return;}if(ui.modal==='wiz'){ui.wz=null;ui.be=null;save();}if(ui.modal==='bundle'){const b=bById(ui.be);if(b&&!b.items.length&&!b.members.length){S.bundles=S.bundles.filter(x=>x!==b);save();}ui.be=null;ui.split=null;}
   ui.modal=null;ui.draft=null;render();}
 /* ---------- events ---------- */
 document.addEventListener('click',e=>{
@@ -1277,9 +1358,14 @@ document.addEventListener('click',e=>{
       setTimeout(()=>{const m=document.querySelector('.bm');if(!m)return;const f=t.dataset.f;const el=f==='sch'?m.querySelector('.sed'):f==='add'?m.querySelector('.pick'):null;if(el&&innerWidth<600)el.scrollIntoView({block:'center'});if(f==='sch'){const q=document.getElementById('qe-'+id+'-');q&&q.focus();}});break;}
     case 'bmadd':{const b=bById(ui.be),i=document.getElementById('bmn');const n=(i&&i.value||'').trim();if(!b||!n){i&&i.focus();break;}
       if(i)i.value='';addMem(b,n);save();render();setTimeout(()=>{const z=document.getElementById('bmn');z&&z.focus();});break;}
+    case 'pplm':{ui.pplBack=ui.modal;ui.modal='ppl';ui.dupes=null;render();break;}
+    case 'prep':{const p=pById(id);if(p){setRep(p,t.dataset.v);save();render();}break;}
+    case 'padel':{const p=pById(id);if(p){p.alts=p.alts.filter(x=>x!==t.dataset.v);delete p.ws[t.dataset.v];save();render();}break;}
+    case 'bmerge':{mergeBundles(t.dataset.v.split(','));save();render();break;}
+    case 'dupx':{ui.dupes=(ui.dupes||[]).filter(g=>g.join(',')!==t.dataset.v);render();break;}
     case 'pf':{const v=t.dataset.v,i=ui.pf.indexOf(v);if(i>=0)ui.pf.splice(i,1);else ui.pf.push(v);ui.pfDone=null;savePf();render();break;}
     case 'pfc':ui.pf=[];ui.pfDone=null;savePf();render();break;
-    case 'bxa':{const b=bById(ui.be);b.xo=false;const a=autoCross(b);if(a!==null)b.cross=a;save();render();break;}
+
     case 'bmdel':{const b=bById(ui.be);b.members.splice(+t.dataset.v,1);save();render();break;}
     case 'bopen':{const b=bById(ui.be);b.open=Math.max(0,Math.min(5-b.members.length,(b.open||0)+ +t.dataset.d));save();render();break;}
     case 'bcol':{const b=bById(ui.be);b.color=t.dataset.v;save();render();break;}
@@ -1352,9 +1438,11 @@ document.addEventListener('click',e=>{
 });
 document.addEventListener('change',e=>{
   const t=e.target;
+  if(t.dataset.pc&&ui.modal==='bundle'){const b=bById(ui.be),it=b&&b.items.find(x=>x.id===t.dataset.i);if(!it)return;it.pc=it.pc||{};if(t.value)it.pc[t.dataset.pc]=t.value;else delete it.pc[t.dataset.pc];save();lookupPeople(bPeopleChars(b).map(x=>x[1]));render();return;}
+  if(t.dataset.pm&&ui.modal==='ppl'){const keep=pById(t.dataset.pm),gone=pById(t.value);if(keep&&gone&&confirm(`${gone.nick} → ${keep.nick} 한 사람으로 합칠까?`)){mergePeople(keep,gone);save();}render();return;}
   if(t.dataset.sf&&ui.modal==='bundle'){const b=bById(ui.be);const iid=t.dataset.i;const it=iid&&b.items.find(x=>x.id===iid);const sc=it?it.o:b.sched;
     if(sc){if(t.dataset.sf==='time')sc.time=normTime(t.value);else if(t.dataset.sf==='hint'){if(sc.t==='wk')sc.hint=t.value.trim().slice(0,12);}else if(/^\d{4}-\d\d-\d\d$/.test(t.value))sc.date=t.value;save();render();}return;}
-  if(t.dataset.bf&&(ui.modal==='bundle'||ui.modal==='wiz')){const b=bById(ui.be);const f=t.dataset.bf;if(f==='cross'){b.cross=t.checked;b.xo=true;}else b[f]=t.value.trim();save();render();return;}
+  if(t.dataset.bf&&(ui.modal==='bundle'||ui.modal==='wiz')){const b=bById(ui.be);const f=t.dataset.bf;if(f==='cross'){if(lockInfo(b)){render();return;}b.cross=t.checked;}else b[f]=t.value.trim();save();render();return;}
   if(t.dataset.if&&ui.modal==='bundle'){const b=bById(ui.be);const it=b.items.find(x=>x.id===t.dataset.i);if(it){const c=charById(it.c);
     if(c&&(planKnown(c)||slotOf(c,it.b))&&setCharDiff(c,it.b,t.value))it.d='';else it.d=t.value;save();render();}return;}
   if(t.dataset.cf){const c=charById(ui.bc);c[t.dataset.cf]=t.value.trim();save();render();
@@ -1373,11 +1461,14 @@ function miCommit(el,all){const b=bById(el.dataset.mi);if(!b)return false;const 
 let ptrDown=false;document.addEventListener('pointerdown',()=>{ptrDown=true;},true);document.addEventListener('pointerup',()=>{ptrDown=false;},true);
 const lateRender=()=>{if(!ptrDown)return render();const f=()=>{document.removeEventListener('pointerup',f,true);setTimeout(render,0);};document.addEventListener('pointerup',f,true);};
 document.addEventListener('toggle',e=>{if(e.target.id==='bkx')ui.bkOpen=e.target.open;},true);
+function paCommit(el,all){const p=pById(el.dataset.pa);if(!p)return false;const parts=el.value.split(/[,，\s]+/);const rest=all?'':parts.pop();let ch=false;
+  for(const n of parts.map(x=>x.trim()).filter(Boolean))ch=addAlt(p,n)||ch;el.value=rest;if(ch)save();return ch;}
+document.addEventListener('keydown',e=>{if(e.key!=='Enter'||!(e.target.dataset&&e.target.dataset.pa))return;e.preventDefault();e.stopPropagation();paCommit(e.target,true);render();},true);
 document.addEventListener('focusin',e=>{if(e.target.dataset&&e.target.dataset.mi)ui.mi=e.target.dataset.mi;});
 document.addEventListener('focusout',e=>{if(ui.miR||!(e.target.dataset&&e.target.dataset.mi))return;miCommit(e.target,true);ui.mi=null;lateRender();});
 document.addEventListener('keydown',e=>{if(e.key!=='Enter'||!(e.target.dataset&&e.target.dataset.mi))return;e.preventDefault();e.stopPropagation();
   if(e.target.value.trim()){if(miCommit(e.target,true))render();}else e.target.blur();},true);
-document.addEventListener('input',e=>{if(e.target.dataset&&e.target.dataset.mi){if(/[,，\s]/.test(e.target.value)&&miCommit(e.target,false))render();return;}if(e.target.dataset&&e.target.dataset.qe){qePreview(e.target);return;}if(e.target.id==='aq'){ui.acc.q=e.target.value;const pos=e.target.selectionStart;render();const i=document.getElementById('aq');i.focus();i.setSelectionRange(pos,pos);}});
+document.addEventListener('input',e=>{if(e.target.dataset&&e.target.dataset.pa){if(/[,，\s]/.test(e.target.value)&&paCommit(e.target,false))render();return;}if(e.target.dataset&&e.target.dataset.mi){if(/[,，\s]/.test(e.target.value)&&miCommit(e.target,false))render();return;}if(e.target.dataset&&e.target.dataset.qe){qePreview(e.target);return;}if(e.target.id==='aq'){ui.acc.q=e.target.value;const pos=e.target.selectionStart;render();const i=document.getElementById('aq');i.focus();i.setSelectionRange(pos,pos);}});
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'&&ui.modal&&askClose())closeModal();
   if(e.key==='Enter'){if(e.target.id==='k')document.querySelector('[data-act=savekey]').click();if(e.target.id==='k0')document.querySelector('[data-act=savekey0]').click();if(e.target.id==='mq')document.querySelector('[data-act=mlook]').click();if(e.target.id==='bmn'){e.preventDefault();if(ui.modal==='wiz'&&!e.target.value.trim())document.querySelector('[data-act=wznext]').click();else document.querySelector('[data-act=bmadd]').click();}
