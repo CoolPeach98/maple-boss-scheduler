@@ -843,11 +843,11 @@ function bState(b,off=0){
 // 매주·조율: the agreed slot counts until it has passed
 function wkLive(s){if(!s||s.t!=='wk'||!s.date)return null;const o=occ(s,0);return o&&!passed(o,kst().getTime())?o:null;}
 function schedMini(s){if(!s||s.t==='none')return '미정';if(s.t==='fix')return s.wd==null?'미정':DAYS[s.wd]+(s.time?' '+s.time:'');if(s.t==='wk'&&!wkLive(s))return s.hint||'시간 미정';if(!s.date)return '미정';const ms=dateMs(s.date),ws=weekStartKst();return ms>=ws&&ms<ws+7*D?DAYS[dayOfMs(ms)]+(s.time?' '+s.time:''):md(ms);}
-// text for a schedule: "매주 금 20:00" / "10/30 금 20:00" / "미정"
-function schedTxt(s,short){if(!s||s.t==='none')return '미정';const t=s.time?' '+s.time:'';
+// text for a schedule: "매주 금 20:00" / "토 20:00" (date inside week ws, default this week; ws=null: always the date) / "11/6 금 20:00" / "미정"
+function schedTxt(s,short,ws){if(!s||s.t==='none')return '미정';const t=s.time?' '+s.time:'';
   if(s.t==='fix')return s.wd==null?(short?'미정':'매주 · 요일 미정'):(short?'':'매주 ')+DAYS[s.wd]+t;
   if(s.t==='wk'&&!wkLive(s))return short?(s.hint||'시간 미정'):'매주·조율'+(s.hint?' '+s.hint:'');
-  if(!s.date)return '날짜 미정';const ms=dateMs(s.date);return md(ms)+' '+DAYS[dayOfMs(ms)]+t;}
+  if(!s.date)return '날짜 미정';const ms=dateMs(s.date),w=ws===undefined?weekStartKst():ws;return (w!=null&&ms>=w&&ms<w+7*D?'':md(ms)+' ')+DAYS[dayOfMs(ms)]+t;}
 
 /* quick time entry: '토9시' '금 20:30' '금8시반' '내일 9시' '다음주 금9시' '11/3 20시' '매주 토9시' '미정'
    bare hours 1-11 are evening (21시), unless 오전 or a leading zero ('09:00'); day names stay in this reset week */
@@ -881,7 +881,7 @@ function parseQ(raw){
 function qTarget(b,it){return it?it.o:b.sched;}
 function qText(b,it,r){if(!r)return '';if(r.t==='none')return it?'같이':'미정';if(r.t==='fix')return schedTxt(r);
   if(r.t==='time'){const c=qTarget(b,it);return c&&(c.t==='fix'||c.date)?schedTxt({...c,time:r.time}):'';}
-  return schedTxt({t:'date',date:r.date,time:r.time})+(r.past?' · 지남':dateMs(r.date)>=weekStartKst()+7*D?' (다음 주)':'');}
+  return schedTxt({t:'date',date:r.date,time:r.time},0,null)+(r.past?' · 지남':dateMs(r.date)>=weekStartKst()+7*D?' (다음 주)':'');}
 function applyQ(b,it,r){if(!r)return false;const cur=qTarget(b,it);const set=ns=>{if(it)it.o=ns;else b.sched=ns;};
   if(r.t==='none'){set(it?null:{t:'none'});return true;}
   if(r.t==='fix'){set({t:'fix',wd:r.wd,time:r.time});return true;}
@@ -1081,10 +1081,10 @@ function bundleCard(b,st,next,off=0){
     const o=it.o&&occ(it.o,ws);const ol=!off&&o&&!done&&passed(o,now)&&(it.o.t==='date'||o.at<ws+7*D);
     if(S.compact&&off)return `<span class="bti" title="${esc(DIFF_KO[d]+' '+it.b+' · '+(c?nick(c):'캐릭터 미정'))}">${ic(it.b)}<span class="bg ${d}">${DIFF_LT[d]}</span></span>`;
     if(S.compact)return `<button class="bti ${done?'clr':''}" data-act="itog" data-id="${b.id}" data-i="${it.id}" aria-pressed="${done}" title="${esc(DIFF_KO[d]+' '+it.b+' · '+(c?nick(c):'캐릭터 미정'))}">${ic(it.b)}<span class="bg ${d}">${DIFF_LT[d]}</span></button>`;
-    return `<div class="bro ${done?'done':''}">${icon(it.b,24,d,'s')}<span class="bb">${esc(it.b)}<i>${DIFF_KO[d]}</i>${capTag(it.b,sz)}</span><span class="bc ${c?'':'nm'}">${c?esc(nick(c)):'캐릭터 미정'}${pcText(it)?`<small class="pcx" title="${esc(pcText(it))}">${esc(pcText(it))}</small>`:''}</span>${it.o?`<span class="ot ${ol?'late':''}">${esc(schedTxt(it.o,1))}</span>`:''}${off?'<span></span>':`<button class="pk ${done?'on':''}" data-act="itog" data-id="${b.id}" data-i="${it.id}" aria-pressed="${done}" aria-label="${esc(it.b+(done?' 클리어 취소':' 클리어 체크'))}"></button>`}</div>`;}).join('');
+    return `<div class="bro ${done?'done':''}">${icon(it.b,24,d,'s')}<span class="bb">${esc(it.b)}<i>${DIFF_KO[d]}</i>${capTag(it.b,sz)}</span><span class="bc ${c?'':'nm'}">${c?esc(nick(c)):'캐릭터 미정'}${pcText(it)?`<small class="pcx" title="${esc(pcText(it))}">${esc(pcText(it))}</small>`:''}</span>${it.o?`<span class="ot ${ol?'late':''}">${esc(schedTxt(it.o,1,ws))}</span>`:''}${off?'<span></span>':`<button class="pk ${done?'on':''}" data-act="itog" data-id="${b.id}" data-i="${it.id}" aria-pressed="${done}" aria-label="${esc(it.b+(done?' 클리어 취소':' 클리어 체크'))}"></button>`}</div>`;}).join('');
   return `<div class="bk ${allDone?'done':''} ${off?'nx':''} ${next?'next':''} ${ui.flashB===b.id?'flash':''}" id="b-${b.id}" style="--acc:${b.color}">
     <div class="bh"><button class="bt" data-act="bed" data-id="${b.id}" title="${esc(bTip(b))}">${bTitle(b)}</button>${off?'':showMi(b)?miInput(b):''}${isX(b)?'<span class="xw">월드 통합</span>':''}<span class="sz">${sz}인</span>
-      ${b.sched.t==='none'&&b.items.some(it=>it.o)?'':`<button class="bs ${b.sched.t} ${sLate?'late':''} ${sToday?'td':''} ${st.late?'late':''}" data-act="bed" data-id="${b.id}" data-f="sch">${b.sched.t==='fix'?'<i>매주</i>':b.sched.t==='wk'?'<i>조율</i>':''}${esc(b.sched.t==='none'?'미정':schedTxt(b.sched,1))}</button>`}</div>
+      ${b.sched.t==='none'&&b.items.some(it=>it.o)?'':`<button class="bs ${b.sched.t} ${sLate?'late':''} ${sToday?'td':''} ${st.late?'late':''}" data-act="bed" data-id="${b.id}" data-f="sch">${b.sched.t==='fix'?'<i>매주</i>':b.sched.t==='wk'?'<i>조율</i>':''}${esc(b.sched.t==='none'?'미정':schedTxt(b.sched,1,ws))}</button>`}</div>
     ${sLate?`<div class="bexp"><span>지난 일정</span><button class="lk" data-act="tonone" data-id="${b.id}">미정으로</button></div>`:''}${b.memo?`<div class="bmemo">${esc(b.memo)}</div>`:''}
     <div class="brs ${S.compact?'cp':''}">${rows||`<button class="btn sm ghost" data-act="bed" data-id="${b.id}" data-f="add">${I.plus}보스</button>`}</div>
     ${its.length&&off?`<div class="bf"><span class="bsum">${its.length}보스<em>${won(sum)}</em></span></div>`:''}${its.length&&!off?`<div class="bf"><span class="bsum">${st.n}/${st.t}<em>${won(sum)}</em></span><span class="sp"></span><button class="btn sm ${allDone?'ghost':''}" data-act="ball" data-id="${b.id}">${allDone?'완료 취소':'모두 완료'}</button></div>`:''}
@@ -1153,7 +1153,7 @@ const bossList=its=>[...new Set(its.map(it=>DIFF_KO[itemDiff(it)]+' '+it.b))].jo
 const memTxt=b=>b.members.length?b.members.join(' · '):b.name||'파티원 미입력';
 function shareText(only){const ws=weekStartKst(),nws=ws+7*D,L=[],N=[],U=[],bs=only?[only]:S.bundles.filter(pfMatch);
   for(const b of bs){const who=memTxt(b),w=weekOcc(b,ws);
-    for(const g of w){if(passed(g.o,kst().getTime()))continue;const its=g.its.filter(it=>!itemDone(it));if(its.length)L.push([g.o.at,dayLbl(g.o,ws)+' | '+who+' | '+bossList(its)]);}
+    for(const g of w){if(passed(g.o,kst().getTime()))continue;const its=g.its.filter(it=>!itemDone(it));if(its.length)L.push([g.o.at,dayLbl(g.o,ws).replace(/^\S+ /,'')+' | '+who+' | '+bossList(its)]);}
     const nd=w.none.filter(it=>!itemDone(it));if(nd.length&&(b.members.length||only))U.push(who+' | '+bossList(nd));
     for(const g of weekOcc(b,nws))if(/date|wk/.test(g.s.t))N.push([g.o.at,dayLbl(g.o,nws)+' | '+who+' | '+bossList(g.its)]);}
   L.sort((a,b)=>a[0]-b[0]);N.sort((a,b)=>a[0]-b[0]);
