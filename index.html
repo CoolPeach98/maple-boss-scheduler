@@ -158,7 +158,7 @@ select.in{padding:0 4px}
 .ob{padding:36px;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap}
 .ob a{color:var(--mu);font-size:12px}
 .pe{padding:22px 16px;color:var(--mu2);font-size:12px;text-align:center}
-.card:focus-visible,.sw:focus-visible,.pt:focus-visible{outline:2px solid var(--tx);outline-offset:-2px}
+.card:focus-visible,.sw:focus-visible,.pt:focus-visible{outline:2px solid var(--tx);outline-offset:2px}
 .nxe{border:0;background:none;padding:0;font:inherit;font-size:12px;color:var(--mu);cursor:pointer;white-space:nowrap;font-variant-numeric:tabular-nums}.nxe b{color:var(--tx);font-weight:600}
 .top button.rv{border:0;background:none;padding:0;font:inherit;color:var(--mu);cursor:pointer}
 .nxe,.top button.rv{border-bottom:1px dotted var(--line2);border-radius:0}.nxe:hover,.top button.rv:hover{color:var(--tx);border-bottom-color:var(--mu)}
@@ -343,14 +343,17 @@ select.in{padding:0 4px}
 .pick{display:flex;flex-direction:column;gap:6px;padding-top:10px}
 .pkr{display:grid;grid-template-columns:96px minmax(0,1fr);gap:10px;align-items:center}
 .pn{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pts{display:flex;flex-wrap:wrap;gap:5px}
-.pt{position:relative;width:32px;height:32px;border:0;padding:0;background:none;border-radius:4px}
-.pt .ic{width:100%;height:100%;opacity:.4;filter:grayscale(.7);transition:opacity .12s}
-.pt:hover .ic{opacity:.8;filter:none}
-.pt.on .ic{opacity:1;filter:none}
-.pt.on{box-shadow:0 0 0 2px var(--w),0 0 0 3.5px var(--acc,var(--ac))}
-.pt.oth::before{content:"";position:absolute;left:3px;right:3px;top:-4px;height:2px;border-radius:1px;background:var(--g)}
-.pt .bg{bottom:-5px}
+.pts{display:flex;flex-wrap:wrap;gap:8px 4px}
+.pt{position:relative;width:44px;border:0;padding:0;background:none;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;color:inherit}
+.pti{position:relative;display:block;width:32px;height:32px;border-radius:4px}
+.pt .ic{width:100%;height:100%;opacity:.7;transition:opacity .12s}
+.pt:hover .ic{opacity:1}
+.pt.on .ic{opacity:1}
+.pt.on .pti{box-shadow:0 0 0 2px var(--w),0 0 0 3.5px var(--acc,var(--ac))}
+.pt.oth .pti::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;border-radius:4px 4px 0 0;background:var(--g);z-index:1}
+.pt .bg{bottom:-5px;z-index:2}
+.ptn{max-width:44px;font-size:10px;line-height:12px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pt.on .ptn{color:var(--tx);font-weight:700}
 .sw{width:20px;height:20px;border-radius:50%;border:2px solid var(--w);box-shadow:0 0 0 1px var(--line2);cursor:pointer;flex:none}
 .sw.on{box-shadow:0 0 0 2px var(--ac)}
 .psz{font-size:12px;color:var(--mu2);margin-left:auto;white-space:nowrap}
@@ -366,7 +369,7 @@ select.in{padding:0 4px}
  .erow{grid-template-columns:1fr;gap:6px}.erow>.lbl{padding-top:0}
  .opn,.ck2{margin-left:0}
  .dbs{max-width:none}.dbs button{height:38px}
- .pkr{grid-template-columns:1fr;gap:4px}.pt{width:38px;height:38px}.pts{gap:10px 6px}
+ .pkr{grid-template-columns:1fr;gap:4px}.pti{width:38px;height:38px}.pt{width:48px}.pts{gap:10px 6px}
  .ero .sed{padding-left:0}.ero .bc{max-width:90px}
  .bm .bd{padding:4px 12px 10px}
 }
@@ -488,7 +491,7 @@ select.in{padding:0 4px}
 .dup{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line2);border-radius:5px;background:var(--panel2);font-size:12px}
 .dup .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--acc);margin-right:4px}
 .ck2.lk{color:var(--tx)}.ck2.lk input{opacity:.7}.ck2 .xr{color:var(--mu2);font-size:11px;margin-left:6px;font-weight:500}
-.pcs{height:24px;font-size:11px;width:auto;max-width:120px;color:var(--mu2);padding:0 2px}.pcs.on{color:var(--tx)}
+.pcs{height:24px;font-size:11px;width:auto;max-width:120px;color:var(--tx);padding:0 2px}
 .bc .pcx{display:block;color:var(--mu2);font-size:10px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-decoration:none}
 </style>
 </head>
@@ -500,7 +503,7 @@ const ICONS = {"가엔슬": "data:image/webp;base64,UklGRrILAABXRUJQVlA4IKYLAABw
 const ICI=Object.fromEntries(Object.keys(ICONS).map((k,i)=>[k,i]));
 {const st=document.createElement('style');st.textContent=Object.entries(ICONS).map(([k,v])=>`.ic.i${ICI[k]}{background-image:url(${v})}`).join('\n');document.head.appendChild(st);}
 const API='https://open.api.nexon.com/maplestory/v1';
-const APP_VER="v39";
+const APP_VER="v40";
 const GUIDE_HTML="<h3>1. 캐릭터</h3><h4>캐릭터 등록</h4><ul><li>오른쪽 위 \"닉네임으로 추가\"에 닉네임을 입력하면 직업, 레벨, 월드, 이미지를 불러옵니다.</li><li>넥슨 API 키를 등록하면 계정의 캐릭터 목록에서 바로 고를 수 있습니다.</li></ul><h4>캐릭터 카드</h4><ul><li>카드의 &lt; &gt; 버튼으로 캐릭터 순서를 바꿉니다.</li><li>카드에는 이번 주 수익, 클리어 수(최대 12), 월간 수익이 표시됩니다.</li><li>기간제 칭호를 착용 중이면 \"칭호 이름 · N일 남음\"이 표시되고, 마우스를 올리면 정확한 만료 시각이 나옵니다. API 키 없이 추가한 캐릭터도 표시됩니다.</li></ul><h4>보스 설정</h4><ul><li>캐릭터 카드를 누르면 보스와 난이도를 고르는 창이 열립니다.</li><li>주간 보스는 캐릭터당 최대 12개까지 선택할 수 있습니다.</li><li>검은마법사(월간)는 별도로 설정합니다.</li><li>API 키가 있으면 인게임 보스 스케줄러에 등록한 보스를 그대로 불러옵니다.</li></ul><h3>2. 파티</h3><h4>파티 만들기</h4><ul><li>\"+ 파티\"를 누르고 파티원, 보스, 일정을 입력합니다.</li><li>파티 제목은 파티원 닉네임으로 자동 표시됩니다.</li><li>파티 카드 아무 곳이나 누르거나 오른쪽 위 연필 버튼을 누르면 파티 설정이 열립니다.</li></ul><h4>파티원</h4><ul><li>파티원 칸에 닉네임을 입력하고 \"추가\"를 누릅니다.</li><li><b>구인 필요</b>: 아직 구하지 못한 인원 수를 + - 로 설정합니다.</li><li><b>월드 통합</b>: 다른 월드 캐릭터가 파티에 있으면 자동으로 체크되고 고정됩니다.</li></ul><h4>파티원 관리 (부캐 설정)</h4><ul><li>파티원은 \"사람\" 단위로 관리됩니다. 대표 닉네임 하나에 부캐를 묶을 수 있습니다.</li><li>파티 영역 위쪽의 \"파티원\" 버튼으로 열고, 사람별로 부캐 닉네임을 추가합니다.</li><li><b>\"대표로\"</b>: 해당 부캐를 대표 닉네임으로 바꿉니다. 파티 제목도 함께 바뀝니다.</li><li><b>\"합치기\"</b>: 같은 사람이 두 번 등록됐을 때 하나로 합칩니다.</li><li>부캐가 있는 파티원은 보스마다 어떤 캐릭터로 오는지 고를 수 있습니다.</li><li>부캐 닉네임을 파티원 칸에 입력해도 같은 사람으로 인식됩니다.</li></ul><h4>일정</h4><ul><li>빠른 입력 칸에 \"토9시\", \"매주 금 21시\", \"11/6 20시\"처럼 입력하면 자동으로 인식됩니다.</li><li>이미 지난 요일을 입력하면 다음 주로 들어갑니다.</li><li><b>매주</b>: 매주 같은 요일·시간</li><li><b>매주 조율</b>: 매주 가지만 시간은 그때그때 정함</li><li><b>날짜</b>: 이번 한 번만</li><li><b>미정</b>: 아직 정하지 않음</li><li><b>따로</b>: 같은 파티 안에서 보스마다 일정을 다르게 정할 수 있습니다.</li></ul><h4>파티 설정 기타</h4><ul><li><b>파티 이름</b>: 파티원 닉네임 대신 원하는 이름으로 표시합니다.</li><li><b>파티 색</b>: 카드와 달력 색을 정합니다.</li><li><b>메모</b>: 카드에 함께 표시됩니다.</li><li><b>⋯ 메뉴</b>: 파티 나누기, 복제 등을 할 수 있습니다.</li><li>삭제나 변경 직후 뜨는 알림에서 \"되돌리기\"를 누를 수 있습니다.</li></ul><h3>3. 보기와 공유</h3><ul><li><b>이번 주 / 다음 주</b>: 주간 일정을 넘겨 봅니다.</li><li><b>카드 / 표</b>: 파티 카드 보기와 캐릭터×보스 표 보기를 전환합니다.</li><li>파티원 이름 버튼을 누르면 그 사람과 가는 파티만 걸러 봅니다.</li><li>파티 탭 위에 다음 보스 일정까지 남은 시간이 표시됩니다.</li><li><b>일정 복사</b>: 이번 주 남은 일정을 카톡에 붙여넣기 좋은 형태로 복사합니다.</li></ul><h3>4. 클리어 체크와 수익</h3><ul><li>캐릭터 카드의 보스 아이콘이나 파티 카드의 체크박스로 클리어를 표시합니다.</li><li>\"모두 완료\"로 파티 보스를 한 번에 체크할 수 있습니다.</li><li>API 키가 있으면 인게임 클리어 기록이 자동으로 체크됩니다. 실제로 잡은 난이도가 다르면 그 난이도로 바뀝니다.</li><li>맨 위에 이번 주 수익(번 금액 / 전체)과 월간 수익이 따로 표시됩니다.</li><li>한 월드의 주간 결정석이 90개를 넘으면 경고가 표시됩니다.</li><li>수익을 누르면 지난주 기록을 볼 수 있습니다.</li><li>매주 목요일 0시에 자동으로 초기화됩니다.</li></ul><h3>5. 설정</h3><ul><li><b>넥슨 API 키</b>: 입력하면 캐릭터 목록과 클리어 기록을 자동으로 불러옵니다. 키는 사용하는 브라우저에만 저장됩니다. (백업 시 '키 포함'을 체크하면 백업 파일에도 저장) (발급: openapi.nexon.com)</li><li><b>화면</b>: 라이트 / 다크 / 시스템 중에서 선택합니다.</li><li><b>백업</b>: 내보내기 / 가져오기로 데이터를 파일로 저장하거나 불러옵니다.</li><li><b>사용 안내</b>: 이 안내와 현재 버전을 볼 수 있습니다.</li></ul><p class=\"nt\">※ 모든 데이터는 브라우저에 저장됩니다. 인터넷 사용 기록을 삭제하면 데이터가 사라질 수 있으니 주기적으로 백업해 주세요.</p>";
 const LS='bsd.v4', LS1='bsd.v1', LSK='bsd.key';
 const DIFF_KO={Z:'이지',N:'노말',H:'하드',C:'카오스',E:'익스트림'};
@@ -518,6 +521,7 @@ const WEEKLY=[
 ];
 const MONTHLY={id:'검은마법사',api:'검은 마법사',d:['H','E'],monthly:true};
 const ALL=[...WEEKLY,MONTHLY];
+const bShortName=b=>b==='검은마법사'?'검마':b;
 /* Boss crystal sale prices (meso, solo / 1인 판매가). Single table: edit here when Nexon adjusts prices.
    Source: Maple Scanner 결정석 가격표 https://maplescanner.com/boss/crystal
      "마지막 갱신 2026-10-25 · 2026년 10월 22일 조정가 기준", fetched 2026-10-29 (KST).
@@ -820,6 +824,8 @@ function lockInfo(b){const r=[];
   for(const it of b.items){const c=it.c&&charById(it.c);const mw=c&&wNorm((S.cache[c.id]||{}).world||c.world);if(!mw)continue;
     for(const id of b.pids){const p=pById(id);if(!p)continue;const n=(it.pc&&it.pc[id])||p.nick,x=p.ws&&p.ws[n],w=x&&!x.f&&wNorm(x.w);
       if(w&&w!==mw){const t=(n===p.nick?n:p.nick+'('+n+')')+': '+w;if(!r.includes(t))r.push(t);}}}
+  if(!b.items.length){const mws=new Set(S.chars.map(c=>wNorm((S.cache[c.id]||{}).world||c.world)).filter(Boolean));
+    if(mws.size)for(const id of b.pids){const p=pById(id),x=p&&p.ws&&p.ws[p.nick],w=x&&!x.f&&wNorm(x.w);if(w&&!mws.has(w)){const t=p.nick+': '+w;if(!r.includes(t))r.push(t);}}}
   return r.length?r:null;}
 function isX(b){return !!lockInfo(b)||!!b.cross;}
 const pq=[];let pqBusy=false;
@@ -1110,7 +1116,7 @@ function tile(c,s,mon){
 }
 const nick=c=>c.name||c.alias||c.cls||'캐릭터';
 const chIdx=id=>{const i=S.chars.findIndex(c=>c.id===id);return i<0?99:i;};
-const itemSort=(x,y)=>ORDER[x.b]-ORDER[y.b]||chIdx(x.c)-chIdx(y.c);
+const itemSort=(x,y)=>chIdx(x.c)-chIdx(y.c)||ORDER[x.b]-ORDER[y.b];
 const bBosses=b=>[...new Set(b.items.slice().sort((x,y)=>ORDER[x.b]-ORDER[y.b]).map(i=>i.b))].join('·');
 function bTitle(b){const n=b.name?`<b>${esc(b.name)}</b>`:'';const ms=b.members.length?`<span class="who">${b.members.map(esc).join(' · ')}${b.open?` <i class="rq">구인 ${b.open}</i>`:''}</span>`:'';if(n||ms)return n+ms;
   // nobody named yet: my characters in it (schedule and colour on the same row tell twins apart)
@@ -1135,7 +1141,7 @@ function bundleCard(b,st,next,off=0){
     const o=it.o&&occ(it.o,ws);const ol=!off&&o&&!done&&passed(o,now)&&(it.o.t==='date'||o.at<ws+7*D);
     if(S.compact&&off)return `<span class="bti" title="${esc(DIFF_KO[d]+' '+it.b+' · '+(c?nick(c):'캐릭터 미정'))}">${ic(it.b)}<span class="bg ${d}">${DIFF_LT[d]}</span></span>`;
     if(S.compact)return `<button class="bti ${done?'clr':''}" data-act="itog" data-id="${b.id}" data-i="${it.id}" aria-pressed="${done}" title="${esc(DIFF_KO[d]+' '+it.b+' · '+(c?nick(c):'캐릭터 미정'))}">${ic(it.b)}<span class="bg ${d}">${DIFF_LT[d]}</span></button>`;
-    return `<div class="bro ${done?'done':''}">${icon(it.b,24,d,'s')}<span class="bb">${esc(it.b)}<i>${DIFF_KO[d]}</i>${capTag(it.b,sz)}</span><span class="bc ${c?'':'nm'}">${c?esc(nick(c)):'캐릭터 미정'}${pcText(it)?`<small class="pcx" title="${esc(pcText(it))}">${esc(pcText(it))}</small>`:''}</span>${it.o?`<span class="ot ${ol?'late':''}">${esc(schedTxt(it.o,1,ws))}</span>`:''}${off?'<span></span>':`<button class="pk ${done?'on':''}" data-act="itog" data-id="${b.id}" data-i="${it.id}" aria-pressed="${done}" aria-label="${esc(it.b+(done?' 클리어 취소':' 클리어 체크'))}"></button>`}</div>`;}).join('');
+    return `<div class="bro ${done?'done':''}">${icon(it.b,24,d,'s')}<span class="bb">${esc(it.b)}<i>${DIFF_KO[d]}</i>${capTag(it.b,sz)}</span><span class="bc ${c?'':'nm'}">${c?esc(nick(c)):'캐릭터 미정'}${pcText(it,b)?`<small class="pcx" title="${esc(pcText(it,b))}">${esc(pcText(it,b))}</small>`:''}</span>${it.o?`<span class="ot ${ol?'late':''}">${esc(schedTxt(it.o,1,ws))}</span>`:''}${off?'<span></span>':`<button class="pk ${done?'on':''}" data-act="itog" data-id="${b.id}" data-i="${it.id}" aria-pressed="${done}" aria-label="${esc(it.b+(done?' 클리어 취소':' 클리어 체크'))}"></button>`}</div>`;}).join('');
   return `<div class="bk ${allDone?'done':''} ${off?'nx':''} ${next?'next':''} ${ui.flashB===b.id?'flash':''}" id="b-${b.id}" data-card="${b.id}" style="--acc:${b.color}">
     <div class="bh"><button class="bt" data-act="bed" data-id="${b.id}" title="${esc(bTip(b))}">${bTitle(b)}</button>${off?'':showMi(b)?miInput(b):''}${isX(b)?'<span class="xw">월드 통합</span>':''}<span class="sz">${sz}인</span>
       ${b.sched.t==='none'&&b.items.some(it=>oLive(it.o))?'':`<button class="bs ${b.sched.t} ${sLate?'late':''} ${sToday?'td':''} ${st.late?'late':''}" data-act="bed" data-id="${b.id}" data-f="sch">${b.sched.t==='fix'?'<i>매주</i>':b.sched.t==='wk'?'<i>조율</i>':''}${esc(b.sched.t==='none'?'미정':schedTxt(b.sched,1,ws))}</button>`}<button class="bpen" data-act="bed" data-id="${b.id}" aria-label="파티 설정">${I.pen}</button></div>
@@ -1270,7 +1276,7 @@ function schedEd(s,iid){
 // which character a member brings for this boss (only people with alts; default none)
 function pcPick(b,it){return b.pids.map(id=>pById(id)).filter(p=>p&&p.alts.length).map(p=>{const v=(it.pc||{})[p.id]||'';
   return `<select class="in pcs ${v?'on':''}" data-pc="${p.id}" data-i="${it.id}" aria-label="${esc(p.nick)} 캐릭터" title="${esc(p.nick)}">${pChars(p).map((n,i)=>`<option value="${i?esc(n):''}" ${(i?n===v:!v||v===p.nick)?'selected':''}>${esc(n)}</option>`).join('')}</select>`;}).join('');}
-const pcText=it=>it.pc?Object.entries(it.pc).map(([id,n])=>{const p=pById(id);return p?(n===p.nick?n:p.nick+' '+n):'';}).filter(Boolean).join(', '):'';
+const pcText=(it,b)=>b.pids.map(id=>{const p=pById(id);if(!p)return '';const n=(it.pc||{})[id];return n&&p.alts.includes(n)?n:p.nick;}).filter(Boolean).join(', ');
 /* v22 people manager: alts, representative, merge (identical parties after a merge are offered, never merged silently) */
 function pplUse(id){return S.bundles.filter(b=>b.pids.includes(id)).length;}
 function pplModal(){const ps=S.people.slice().sort((a,b)=>pplUse(b.id)-pplUse(a.id)||a.nick.localeCompare(b.nick));
@@ -1279,7 +1285,7 @@ function pplModal(){const ps=S.people.slice().sort((a,b)=>pplUse(b.id)-pplUse(a.
     <div class="pnr"><input class="in" id="pnn" placeholder="파티원 닉네임" maxlength="12" autocomplete="off" aria-label="새 파티원 닉네임"><button class="btn sm" data-act="pnadd">추가</button></div>
     ${dup.map(g=>`<div class="dup"><span>${g.map(b=>`<span class="dot" style="--acc:${b.color}"></span>${esc(bShort(b))}`).join(' · ')}</span><span class="lbl">같은 파티원 ${g.length}파티</span><span class="sp"></span><button class="btn sm" data-act="bmerge" data-v="${g.map(b=>b.id).join(',')}">한 파티로</button><button class="btn sm ghost" data-act="dupx" data-v="${g.map(b=>b.id).join(',')}">그대로</button></div>`).join('')}
     ${ps.length?ps.map(p=>{const w=pWorld(p.nick),bs=S.bundles.filter(b=>b.pids.includes(p.id)),ws=weekStartKst();
-      const wk=bs.flatMap(b=>weekOcc(b,ws).filter(g=>!g.its.every(itemDone)).map(g=>({at:g.o.at,t:dayLbl(g.o,ws).replace(/^\S+ /,'')+' '+[...new Set(g.its.map(i=>i.b))].join('·')}))).sort((a,b)=>a.at-b.at);
+      const wk=bs.flatMap(b=>weekOcc(b,ws).filter(g=>!g.its.every(itemDone)).map(g=>({at:g.o.at,t:dayLbl(g.o,ws).replace(/^\S+ /,'')+' '+[...new Set(g.its.map(i=>i.b))].sort((x,y)=>ORDER[x]-ORDER[y]).join('·')}))).sort((a,b)=>a.at-b.at);
       return `<div class="pr" id="pr-${p.id}">
       <div class="prh"><b class="pnk">${esc(p.nick)}</b>${w?`<small>${esc(w)}</small>`:''}<span class="pbs">${bs.map(b=>`<button class="pbn" data-act="bed" data-id="${b.id}" style="--acc:${b.color}" title="${esc(bTip(b))}"><span class="dot"></span>${esc(bShort(b))}</button>`).join('')}</span><span class="sp"></span>
         ${ps.length>1?`<select class="in pms" data-pm="${p.id}" aria-label="${esc(p.nick)}와 합치기"><option value="">합치기</option>${ps.filter(x=>x!==p).map(x=>`<option value="${x.id}">${esc(x.nick)}</option>`).join('')}</select>`:''}<button class="btn sm ghost" data-act="pdel" data-id="${p.id}" aria-label="${esc(p.nick)} 삭제">${I.x}</button></div>
@@ -1323,7 +1329,7 @@ function bundleModal(){
       <button class="btn sm ghost" data-act="idel" data-i="${it.id}" aria-label="빼기">${I.x}</button>`}</div>${sp&&!sel?schedEd(it.o,it.id):''}</div>`;}).join('');
   const pick=S.chars.map(c=>{const sl=slots(c),m=monthlySlot(c);const all=[...sl,...(m?[m]:[])];if(!all.length)return '';
     return `<div class="pkr"><span class="pn" title="${esc(nick(c))}">${esc(nick(c))}</span><div class="pts">${all.map(s=>{const [ob]=itemOf(c.id,s.b);const mine=ob===b;
-      return `<button class="pt ${mine?'on':''} ${ob&&!mine?'oth':''}" ${ob&&!mine?`style="--g:${ob.color}"`:''} data-act="ipick" data-c="${c.id}" data-b="${s.b}" aria-pressed="${mine}" title="${esc(DIFF_KO[s.d]+' '+s.b+(ob&&!mine?' · '+(bTip(ob)):''))}">${ic(s.b)}<span class="bg ${s.d}">${DIFF_LT[s.d]}</span></button>`;}).join('')}</div></div>`;}).join('');
+      return `<button class="pt ${mine?'on':''} ${ob&&!mine?'oth':''}" ${ob&&!mine?`style="--g:${ob.color}"`:''} data-act="ipick" data-c="${c.id}" data-b="${s.b}" aria-pressed="${mine}" title="${esc(DIFF_KO[s.d]+' '+s.b+(ob&&!mine?' · '+(bTip(ob)):''))}"><span class="pti">${ic(s.b)}<span class="bg ${s.d}">${DIFF_LT[s.d]}</span></span><span class="ptn">${esc(bShortName(s.b))}</span></button>`;}).join('')}</div></div>`;}).join('');
   return `<div class="mb" data-act="close"><div role="dialog" aria-modal="true" class="md wide bm" data-stop="1" style="--acc:${b.color}">
     <div class="ph"><h2 class="mh"><span class="dot"></span>${bText(b)?esc(bText(b)):NM}</h2><span class="ctr">${sz}인</span><span class="mt">${won(its.filter(it=>!BMAP[it.b].monthly).reduce((a,it)=>a+share(it.b,effD(it.c&&charById(it.c),it.b,itemDiff(it)),sz),0))}${(m=>m?`<i title="검은마법사">월간 ${won(m)}</i>`:'')(its.filter(it=>BMAP[it.b].monthly).reduce((a,it)=>a+share(it.b,effD(it.c&&charById(it.c),it.b,itemDiff(it)),sz),0))}</span><span class="sp"></span><button class="btn sm ghost" data-act="close" aria-label="닫기">${I.x}</button></div>
     <div class="bd">
@@ -1597,7 +1603,9 @@ document.addEventListener('click',e=>{
     case 'idel':{const b=bById(ui.be);b.items=b.items.filter(x=>x.id!==t.dataset.i);save();render();break;}
     case 'ipick':{const b=bById(ui.be);const [ob,oit]=itemOf(c,t.dataset.b);
       if(ob===b)b.items=b.items.filter(x=>x!==oit);
-      else{if(ob){ob.items=ob.items.filter(x=>x!==oit);toast(`${t.dataset.b} · ${bTip(ob)}에서 옮김`,1);}b.items.push({id:uid('i'),b:t.dataset.b,c,d:'',o:null,dk:null});}
+      else if(ob){if(!confirm(`${t.dataset.b}: ${bTip(ob)} 파티에 있습니다. 이 파티로 옮길까요?`))break;const snap=JSON.stringify(S);
+        ob.items=ob.items.filter(x=>x!==oit);b.items.push({id:uid('i'),b:t.dataset.b,c,d:oit.d||'',o:null,dk:oit.dk||null});save();render();undoToast(`${t.dataset.b} 옮김`,snap);break;}
+      else b.items.push({id:uid('i'),b:t.dataset.b,c,d:'',o:null,dk:null});
       save();render();break;}
     case 'bdel':{const b=bById(ui.be);if(!b)break;if(b.items.length&&!confirm('이 파티를 삭제할까요?'))break;const snap=JSON.stringify(S);S.bundles=S.bundles.filter(x=>x!==b);ui.modal=null;ui.be=null;save();render();if(b.items.length)undoToast('파티 삭제됨',snap);break;}
 
