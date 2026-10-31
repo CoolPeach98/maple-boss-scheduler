@@ -478,6 +478,7 @@ select.in{padding:0 4px}
 .prh{display:flex;align-items:center;gap:8px}.prh .pnk{font-size:13px}.prh small,.mchip small{color:var(--mu2);font-size:11px;margin-left:4px}
 .pcn{color:var(--mu2);font-size:12px}
 .pms{height:26px;font-size:12px;width:120px;flex:none;color:var(--mu)}
+.md.khm{width:480px}.kh{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px;line-height:1.55;word-break:keep-all}a.btn{text-decoration:none}.khn{margin:12px 0 10px;color:var(--mu);font-size:12px}
 .md.gdm{width:640px}.gdm .bd{max-height:min(72vh,720px);overflow:auto}
 .pal{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .mchip.alt{background:var(--panel2);font-weight:500}
@@ -498,7 +499,7 @@ const ICONS = {"가엔슬": "data:image/webp;base64,UklGRrILAABXRUJQVlA4IKYLAABw
 const ICI=Object.fromEntries(Object.keys(ICONS).map((k,i)=>[k,i]));
 {const st=document.createElement('style');st.textContent=Object.entries(ICONS).map(([k,v])=>`.ic.i${ICI[k]}{background-image:url(${v})}`).join('\n');document.head.appendChild(st);}
 const API='https://open.api.nexon.com/maplestory/v1';
-const APP_VER="v33";
+const APP_VER="v34";
 const GUIDE_HTML="<h3>1. 캐릭터</h3><h4>캐릭터 등록</h4><ul><li>오른쪽 위 \"닉네임으로 추가\"에 닉네임을 입력하면 직업, 레벨, 월드, 이미지를 불러옵니다.</li><li>넥슨 API 키를 등록하면 계정의 캐릭터 목록에서 바로 고를 수 있습니다.</li></ul><h4>캐릭터 카드</h4><ul><li>카드의 &lt; &gt; 버튼으로 캐릭터 순서를 바꿉니다.</li><li>카드에는 이번 주 수익, 클리어 수(최대 12), 월간 수익이 표시됩니다.</li><li>기간제 칭호를 착용 중이면 \"칭호 이름 · N일 남음\"이 표시되고, 마우스를 올리면 정확한 만료 시각이 나옵니다. API 키 없이 추가한 캐릭터도 표시됩니다.</li></ul><h4>보스 설정</h4><ul><li>캐릭터 카드를 누르면 보스와 난이도를 고르는 창이 열립니다.</li><li>주간 보스는 캐릭터당 최대 12개까지 선택할 수 있습니다.</li><li>검은마법사(월간)는 별도로 설정합니다.</li><li>API 키가 있으면 인게임 보스 스케줄러에 등록한 보스를 그대로 불러옵니다.</li></ul><h3>2. 파티</h3><h4>파티 만들기</h4><ul><li>\"+ 파티\"를 누르고 파티원, 보스, 일정을 입력합니다.</li><li>파티 제목은 파티원 닉네임으로 자동 표시됩니다.</li><li>파티 카드 아무 곳이나 누르거나 오른쪽 위 연필 버튼을 누르면 파티 설정이 열립니다.</li></ul><h4>파티원</h4><ul><li>파티원 칸에 닉네임을 입력하고 \"추가\"를 누릅니다.</li><li><b>구인 필요</b>: 아직 구하지 못한 인원 수를 + - 로 설정합니다.</li><li><b>월드 통합</b>: 다른 월드 캐릭터가 파티에 있으면 자동으로 체크되고 고정됩니다.</li></ul><h4>파티원 관리 (부캐 설정)</h4><ul><li>파티원은 \"사람\" 단위로 관리됩니다. 대표 닉네임 하나에 부캐를 묶을 수 있습니다.</li><li>파티 영역 위쪽의 \"파티원\" 버튼으로 열고, 사람별로 부캐 닉네임을 추가합니다.</li><li><b>\"대표로\"</b>: 해당 부캐를 대표 닉네임으로 바꿉니다. 파티 제목도 함께 바뀝니다.</li><li><b>\"합치기\"</b>: 같은 사람이 두 번 등록됐을 때 하나로 합칩니다.</li><li>부캐가 있는 파티원은 보스마다 어떤 캐릭터로 오는지 고를 수 있습니다.</li><li>부캐 닉네임을 파티원 칸에 입력해도 같은 사람으로 인식됩니다.</li></ul><h4>일정</h4><ul><li>빠른 입력 칸에 \"토9시\", \"매주 금 21시\", \"11/6 20시\"처럼 입력하면 자동으로 인식됩니다.</li><li>이미 지난 요일을 입력하면 다음 주로 들어갑니다.</li><li><b>매주</b>: 매주 같은 요일·시간</li><li><b>매주 조율</b>: 매주 가지만 시간은 그때그때 정함</li><li><b>날짜</b>: 이번 한 번만</li><li><b>미정</b>: 아직 정하지 않음</li><li><b>따로</b>: 같은 파티 안에서 보스마다 일정을 다르게 정할 수 있습니다.</li></ul><h4>파티 설정 기타</h4><ul><li><b>파티 이름</b>: 파티원 닉네임 대신 원하는 이름으로 표시합니다.</li><li><b>파티 색</b>: 카드와 달력 색을 정합니다.</li><li><b>메모</b>: 카드에 함께 표시됩니다.</li><li><b>⋯ 메뉴</b>: 파티 나누기, 복제 등을 할 수 있습니다.</li><li>삭제나 변경 직후 뜨는 알림에서 \"되돌리기\"를 누를 수 있습니다.</li></ul><h3>3. 보기와 공유</h3><ul><li><b>이번 주 / 다음 주</b>: 주간 일정을 넘겨 봅니다.</li><li><b>카드 / 표</b>: 파티 카드 보기와 캐릭터×보스 표 보기를 전환합니다.</li><li>파티원 이름 버튼을 누르면 그 사람과 가는 파티만 걸러 봅니다.</li><li>파티 탭 위에 다음 보스 일정까지 남은 시간이 표시됩니다.</li><li><b>일정 복사</b>: 이번 주 남은 일정을 카톡에 붙여넣기 좋은 형태로 복사합니다.</li></ul><h3>4. 클리어 체크와 수익</h3><ul><li>캐릭터 카드의 보스 아이콘이나 파티 카드의 체크박스로 클리어를 표시합니다.</li><li>\"모두 완료\"로 파티 보스를 한 번에 체크할 수 있습니다.</li><li>API 키가 있으면 인게임 클리어 기록이 자동으로 체크됩니다. 실제로 잡은 난이도가 다르면 그 난이도로 바뀝니다.</li><li>맨 위에 이번 주 수익(번 금액 / 전체)과 월간 수익이 따로 표시됩니다.</li><li>한 월드의 주간 결정석이 90개를 넘으면 경고가 표시됩니다.</li><li>수익을 누르면 지난주 기록을 볼 수 있습니다.</li><li>매주 목요일 0시에 자동으로 초기화됩니다.</li></ul><h3>5. 설정</h3><ul><li><b>넥슨 API 키</b>: 입력하면 캐릭터 목록과 클리어 기록을 자동으로 불러옵니다. 키는 사용하는 브라우저에만 저장됩니다. (백업 시 '키 포함'을 체크하면 백업 파일에도 저장) (발급: openapi.nexon.com)</li><li><b>화면</b>: 라이트 / 다크 / 시스템 중에서 선택합니다.</li><li><b>백업</b>: 내보내기 / 가져오기로 데이터를 파일로 저장하거나 불러옵니다.</li><li><b>사용 안내</b>: 이 안내와 현재 버전을 볼 수 있습니다.</li></ul><p class=\"nt\">※ 모든 데이터는 브라우저에 저장됩니다. 인터넷 사용 기록을 삭제하면 데이터가 사라질 수 있으니 주기적으로 백업해 주세요.</p>";
 const LS='bsd.v4', LS1='bsd.v1', LSK='bsd.key';
 const DIFF_KO={Z:'이지',N:'노말',H:'하드',C:'카오스',E:'익스트림'};
@@ -1379,7 +1380,7 @@ function render(){
     <div class="panel">
       <div class="ph">${empty?'<h2>캐릭터</h2>':`<button class="tgl ch" data-act="cfold" aria-expanded="${!S.cfold}"><h2>캐릭터</h2></button>`}${S.cfold&&!empty?`<div class="cms">${S.chars.map(c=>`<button class="cm" data-act="cfold" title="${esc(nick(c))}"><b>${esc(nick(c))}</b><span>${weeklyCount(c)}/12</span></button>`).join('')}</div>`:''}<span class="sp"></span>
         ${empty?'':`${key?`<button class="btn sm ghost" data-act="acc">${I.plus}계정에서 추가</button>`:''}<button class="btn sm ghost" data-act="man">${I.plus}닉네임으로 추가</button>`}</div>
-      ${empty?`<div class="ob">${key?'<button class="btn pri" data-act="acc">계정 캐릭터 불러오기</button>':`<input class="in" id="k0" type="password" style="width:320px" placeholder="넥슨 Open API 키"><button class="btn pri" data-act="savekey0">연결</button><a class="btn ghost" href="https://openapi.nexon.com/my-application/" target="_blank" rel="noopener">키 발급</a>`}<button class="btn" data-act="man">닉네임으로 추가</button></div>`:S.cfold?'':`<div class="cards">${cards}</div>`}
+      ${empty?`<div class="ob">${key?'<button class="btn pri" data-act="acc">계정 캐릭터 불러오기</button>':`<input class="in" id="k0" type="password" style="width:320px" placeholder="넥슨 Open API 키"><button class="btn pri" data-act="savekey0">연결</button>${KEYBTNS}`}<button class="btn" data-act="man">닉네임으로 추가</button></div>`:S.cfold?'':`<div class="cards">${cards}</div>`}
     </div>
     ${empty?'':partySection()}
   </div>${modalHtml()}`;
@@ -1413,19 +1414,22 @@ function bossModal(){
     <div class="ft">${c.manual?'':`<button class="btn" data-act="breset">스케줄러 기준으로 되돌리기</button>`}<button class="btn" data-act="bclear">전체 해제</button><span class="sp"></span><button class="btn" data-act="close" data-force="1">취소</button><button class="btn pri" data-act="bsave">저장</button></div>
   </div></div>`;
 }
+// v34: API key issuance (steps follow openapi.nexon.com 가이드 > 사전 준비하기)
+const KEYBTNS='<a class="btn ghost" href="https://openapi.nexon.com/my-application/" target="_blank" rel="noopener">키 발급</a><button class="btn ghost" data-act="khelp">발급 방법</button>';
+const KEYHELP=['넥슨 ID로 NEXON Open API에 로그인합니다.','내 애플리케이션 &gt; 애플리케이션 등록에서 게임은 메이플스토리, 타입은 개발 단계를 고르고 서비스명을 입력합니다.','이용 약관에 동의하고 등록하면 API Key가 발급됩니다.','애플리케이션 상세에서 API Key를 복사해 키 입력칸에 붙여 넣습니다.','다른 사이트에 쓰려고 발급받은 메이플스토리 키도 그대로 쓸 수 있습니다.'];
 function modalHtml(){
   const m=ui.modal;if(!m)return '';
   const head=t=>`<div class="ph"><h2>${t}</h2><span class="sp"></span><button class="btn sm ghost" data-act="close" aria-label="닫기">${I.x}</button></div>`;
   if(m==='set')return `<div class="mb" data-act="close"><div role="dialog" aria-modal="true" class="md" data-stop="1">${head('설정')}<div class="bd">
       <span class="lbl">넥슨 Open API 키</span>
-      <div class="row"><input class="in" id="k" type="password" style="flex:1" value="${esc(key)}" autocomplete="off"><button class="btn pri" data-act="savekey">저장</button></div>
-      <div class="row"><a href="https://openapi.nexon.com" target="_blank" style="color:var(--mu);font-size:12px">openapi.nexon.com</a></div>
+      <div class="row"><input class="in" id="k" type="password" style="flex:1" value="${esc(key)}" autocomplete="off"><button class="btn pri" data-act="savekey">저장</button>${KEYBTNS}</div>
       <div class="row"><span class="lbl">화면</span><div class="seg sm" role="group" aria-label="화면">${[['light','라이트'],['dark','다크'],['system','시스템']].map(([v,t])=>`<button class="${theme()===v?'on':''}" data-act="theme" data-v="${v}" aria-pressed="${theme()===v}">${t}</button>`).join('')}</div></div>
       <div class="gdr"><button class="gdb" data-act="guide">사용 안내</button></div>
       <details class="bkx" id="bkx" ${ui.bkOpen?'open':''}><summary>백업</summary>
       <div class="row"><button class="btn" data-act="exp">내보내기</button><label class="row" style="gap:5px;color:var(--mu);font-size:12px"><input type="checkbox" id="xk"> 키 포함</label><button class="btn" data-act="imp">가져오기</button><span class="sp"></span><button class="btn dng" data-act="reset" ${ui.busy?'disabled':''}>데이터 초기화</button></div></details>
       <div class="attr">Data based on NEXON Open API · API 키는 이 브라우저에만 저장<span class="ver">${APP_VER}</span></div><div class="attr legal">넥슨과 무관한 비공식 도구 · 게임 데이터 권리는 넥슨코리아에 있음</div>
     </div></div></div>`;
+  if(m==='khelp')return `<div class="mb" data-act="close"><div role="dialog" aria-modal="true" aria-label="API 키 발급 방법" class="md khm" data-stop="1">${head('API 키 발급 방법')}<div class="bd"><ol class="kh">${KEYHELP.map(x=>`<li>${x}</li>`).join('')}</ol><p class="khn">키는 이 브라우저에만 저장됩니다.</p><div class="row"><a class="btn" href="https://openapi.nexon.com/my-application/" target="_blank" rel="noopener">키 발급</a></div></div></div></div>`;
   if(m==='guide')return `<div class="mb" data-act="close"><div role="dialog" aria-modal="true" aria-label="사용 안내" class="md gdm" data-stop="1">${head('사용 안내 '+APP_VER)}<div class="bd gd">${GUIDE_HTML}</div></div></div>`;
   if(m==='boss')return bossModal();
   if(m==='ppl')return pplModal();
@@ -1502,7 +1506,8 @@ function addMem(b,n){if(isMine(String(n||'').trim())){toast(n+': 내 캐릭터')
 // suggestion options: representative nicks, alts shown as 'alt → main'
 const pplOpts=(skip=[])=>S.people.filter(p=>!skip.includes(p.nick)).flatMap(p=>[`<option value="${esc(p.nick)}">`,...p.alts.map(a=>`<option value="${esc(a)}" label="${esc(a+' → '+p.nick)}">`)]).join('');
 const freeColor=()=>{const used=new Set(S.bundles.map(b=>b.color));return COLORS.find(x=>!used.has(x))||COLORS[S.bundles.length%COLORS.length];};
-function closeModal(){document.querySelectorAll('.md [data-qe]').forEach(el=>{if(qeFlush(el))el.value='';});if(ui.modal==='share'&&ui.shBack){ui.shBack=0;ui.modal='bundle';render();return;}ui.sel=null;if(ui.modal==='ppl'){ui.dupes=null;const bk=ui.pplBack;ui.pplBack=null;ui.modal=bk==='bundle'&&bById(ui.be)?'bundle':null;render();return;}if(ui.modal==='wiz'){ui.wz=null;ui.be=null;save();}if(ui.modal==='bundle'){const b0=bById(ui.be);if(b0){if(b0.sched.t==='fix'&&b0.sched.wd==null)b0.sched={t:'none'};for(const it of b0.items)if(it.o&&it.o.t==='fix'&&it.o.wd==null)it.o=null;save();}const b=bById(ui.be);const dd=b&&ui.dupDraft===b.id;ui.dupDraft=null;ui.more=false;if(b&&!b.items.length&&(dd||!b.members.length)){S.bundles=S.bundles.filter(x=>x!==b);save();}ui.be=null;ui.split=null;}
+function closeModal(){document.querySelectorAll('.md [data-qe]').forEach(el=>{if(qeFlush(el))el.value='';});
+  if(ui.modal==='khelp'){const bk=ui.khBack||{};ui.khBack=null;ui.modal=bk.m||null;render();const i=bk.id&&document.getElementById(bk.id);if(i&&bk.v!=null){i.value=bk.v;i.focus();}return;}if(ui.modal==='share'&&ui.shBack){ui.shBack=0;ui.modal='bundle';render();return;}ui.sel=null;if(ui.modal==='ppl'){ui.dupes=null;const bk=ui.pplBack;ui.pplBack=null;ui.modal=bk==='bundle'&&bById(ui.be)?'bundle':null;render();return;}if(ui.modal==='wiz'){ui.wz=null;ui.be=null;save();}if(ui.modal==='bundle'){const b0=bById(ui.be);if(b0){if(b0.sched.t==='fix'&&b0.sched.wd==null)b0.sched={t:'none'};for(const it of b0.items)if(it.o&&it.o.t==='fix'&&it.o.wd==null)it.o=null;save();}const b=bById(ui.be);const dd=b&&ui.dupDraft===b.id;ui.dupDraft=null;ui.more=false;if(b&&!b.items.length&&(dd||!b.members.length)){S.bundles=S.bundles.filter(x=>x!==b);save();}ui.be=null;ui.split=null;}
   ui.modal=null;ui.draft=null;render();}
 /* ---------- events ---------- */
 function selOf(el){if(!el)return null;if(el.id)return '#'+CSS.escape(el.id);const d=el.dataset,ks=['act','id','c','b','i','f'].filter(k=>d[k]!=null);return ks.length?ks.map(k=>`[data-${k}="${CSS.escape(d[k])}"]`).join(''):null;}
@@ -1550,6 +1555,7 @@ document.addEventListener('click',e=>{
     case 'copy':{const x=document.getElementById('shx');if(x){x.select();copyText(x.value);}break;}
     case 'hist':ui.modal='hist';render();break;
     case 'guide':ui.modal='guide';render();break;
+    case 'khelp':{const i=document.getElementById(ui.modal==='set'?'k':'k0');ui.khBack={m:ui.modal==='set'?'set':null,id:i&&i.id,v:i?i.value:null};ui.modal='khelp';render();break;}
     case 'cgone':{const ch=charById(c);if(!ch)break;const snap=JSON.stringify(S);S.chars=S.chars.filter(x=>x!==ch);S.bundles.forEach(b=>b.items=b.items.filter(x=>x.c!==ch.id));save();render();undoToast(`${nick(ch)} 삭제됨`,snap);break;}
     case 'theme':localStorage.setItem(LSTH,t.dataset.v);applyTheme();render();break;
     case 'gob':{if(S.tbl){ui.hlB=id;clearTimeout(ui.hlT);ui.hlT=setTimeout(()=>{ui.hlB=null;render();},2500);render();const el=document.querySelector('.tc.hl');el&&el.scrollIntoView({block:'center',behavior:'smooth'});break;}
