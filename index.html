@@ -1095,7 +1095,7 @@ function faceStyle(url,size,z,cy,cx=146){const av=isAv(url),n=av?180:300;if(av){
 function bodyStyle(url){const av=isAv(url);return `background-image:url('${esc(url)}');background-size:${av?'133px 133px':'222px 222px'};background-position:${av?'calc(50% - 3px) calc(50% - 8px)':'50% calc(50% - 7px)'}`;}
 function face(c,size){return `<span class="face" title="${esc(alias(c))}" style="${faceStyle(charImg(c),size,size/34,146)}"></span>`;}
 const alias=c=>nick(c);
-const mkTitle=t=>({n:t&&t.title_name||'',exp:t&&t.date_expire||null,t:Date.now()});
+const mkTitle=t=>({n:t&&t.title_name||'',exp:t&&(t.date_expire||t.date_option_expire)||null,t:Date.now()});
 function titleOf(c,now=Date.now()){const t=(S.cache[c.id]||{}).title;if(!isObj(t)||!t.n||!t.exp)return null;const ms=Date.parse(t.exp);if(!(ms>now))return null;const left=ms-now;
   const k=kst(ms);return {n:t.n,left:(()=>{const d=Math.floor(left/D),h=Math.floor((left-d*D)/H);return d?d+'일'+(h?' '+h+'시간':'')+' 남음':Math.max(1,h)+'시간 남음';})(),until:`${k.getUTCMonth()+1}/${k.getUTCDate()} ${String(k.getUTCHours()).padStart(2,'0')}:${String(k.getUTCMinutes()).padStart(2,'0')}까지`};}
 const job=c=>{const cc=S.cache[c.id]||{};const cl=cc.cls||c.cls||'',lv=cc.level||c.level||'';return [cl,lv?'Lv.'+lv:''].filter(Boolean).join(' · ');};
